@@ -13,6 +13,7 @@
 
 ;;; Code:
 
+(require 'cl-lib)
 (require 'ert)
 (require 'pimacs)
 (require 'pimacs-extensions)
@@ -95,51 +96,70 @@
   (pimacs-send-prompt prompt)
   (pimacs-extensions--drain-process-output))
 
+(defconst pimacs-extensions--silenced-message-patterns
+  '("^(.*) Starting pimacs version .+\\.\\.\\.$"
+    "^(.*) pimacs agent started successfully\\.$"
+    "^(.*) pimacs exits: killed\\(: [0-9]+\\)?\\.$"))
+
+(defmacro pimacs-extensions--with-silenced-messages (&rest body)
+  (declare (indent 0))
+  `(let ((message-fn (symbol-function 'message)))
+     (cl-letf (((symbol-function 'message)
+                (lambda (format-string &rest args)
+                  (let ((text (apply #'format-message format-string args)))
+                    (unless (cl-some
+                             (lambda (pattern)
+                               (string-match-p pattern text))
+                             pimacs-extensions--silenced-message-patterns)
+                      (funcall message-fn "%s" text))))))
+       ,@body)))
+
 (defmacro pimacs-extensions--with-integration-project (scenario &rest body)
   (declare (indent 1))
-  `(let* ((project pimacs-extensions--project-directory)
-          (agent-directory pimacs-extensions--project-agent-directory)
-          (fixture
-           (expand-file-name
-            "fixture/src/index.ts"
-            pimacs-extensions--integration-directory))
-          (hashline
-           (expand-file-name
-            "fixture/node_modules/pi-hashline-edit/index.ts"
-            pimacs-extensions--integration-directory))
-          (sample (expand-file-name "sample.txt" project))
-          (original-sample
-           (with-temp-buffer
-             (insert-file-contents sample)
-             (buffer-string)))
-          (sessions-directory (expand-file-name "sessions" agent-directory))
-          (default-directory (file-name-as-directory project))
-          (pimacs-process-environment
-           (list (concat "PI_CODING_AGENT_DIR=" agent-directory)
-                 (concat "FIXTURE_MODE="
-                         (pimacs-extensions--fixture-mode))
-                 (concat "FIXTURE_SCENARIO=" ,scenario)))
-          (pimacs-flags
-           (list "--tools" "read,edit,write,grep"
-                 "--extension" fixture
-                 "--extension" hashline)))
-     (when (file-exists-p sessions-directory)
-       (delete-directory sessions-directory t))
-     (pimacs-enable-extensions "pi-hashline-edit")
-     (pimacs-chat)
-     (sleep-for 2)
-     (unwind-protect
-         (progn
-           ,@body
-           (pimacs-extensions--drain-process-output)
-           (pimacs--with-chat-buffer
-            (pimacs-extensions--check-tape
-             ,scenario ".txt"
-             (buffer-substring (point-min) (point-max)))))
-       (ignore-errors (pimacs-quit-chat))
-       (write-region original-sample nil sample nil 'silent)
-       (when (file-exists-p sessions-directory)
-         (delete-directory sessions-directory t)))))
+  `(pimacs-extensions--with-silenced-messages
+    (let* ((project pimacs-extensions--project-directory)
+           (agent-directory pimacs-extensions--project-agent-directory)
+           (fixture
+            (expand-file-name
+             "fixture/src/index.ts"
+             pimacs-extensions--integration-directory))
+           (hashline
+            (expand-file-name
+             "fixture/node_modules/pi-hashline-edit/index.ts"
+             pimacs-extensions--integration-directory))
+           (sample (expand-file-name "sample.txt" project))
+           (original-sample
+            (with-temp-buffer
+              (insert-file-contents sample)
+              (buffer-string)))
+           (sessions-directory (expand-file-name "sessions" agent-directory))
+           (default-directory (file-name-as-directory project))
+           (pimacs-process-environment
+            (list (concat "PI_CODING_AGENT_DIR=" agent-directory)
+                  (concat "FIXTURE_MODE="
+                          (pimacs-extensions--fixture-mode))
+                  (concat "FIXTURE_SCENARIO=" ,scenario)))
+           (pimacs-flags
+            (list "--tools" "read,edit,write,grep"
+                  "--extension" fixture
+                  "--extension" hashline)))
+      (when (file-exists-p sessions-directory)
+        (delete-directory sessions-directory t))
+      (pimacs-enable-extensions "pi-hashline-edit")
+      (pimacs-chat)
+      (sleep-for 2)
+      (unwind-protect
+          (progn
+            ,@body
+            (pimacs-extensions--drain-process-output)
+            (pimacs--with-chat-buffer
+             (pimacs-extensions--check-tape
+              ,scenario ".txt"
+              (buffer-substring (point-min) (point-max)))))
+        (ignore-errors (pimacs-quit-chat))
+        (write-region original-sample nil sample nil 'silent)
+        (when (file-exists-p sessions-directory)
+          (delete-directory sessions-directory t))))))
 
 (ert-deftest pimacs-extensions-hashline ()
   (pimacs-extensions--with-integration-project
