@@ -1,0 +1,937 @@
+http_interactions:
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:35589
+        connection: keep-alive
+        accept: application/json
+        user-agent: OpenAI/JS 6.26.0
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 6.26.0
+        x-stainless-os: Linux
+        x-stainless-arch: x64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.1
+        authorization: Bearer fixture
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '11200'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\nAvailable tools:\n- read: Read file
+          contents as LINE#HASH-anchored lines; edit requires these anchors\n-
+          edit: Make precise file edits at LINE#HASH anchors (e.g. 5#MQ) copied
+          from read, batching all edits to a file in one call\n- write: Create
+          or overwrite files\n- grep: Search files with ripgrep; results carry
+          LINE#HASH anchors usable directly in edit\n\nIn addition to the tools
+          above, you may have access to other custom tools depending on the
+          project.\n\nGuidelines:\n- Use read before edit whenever you do not
+          hold current LINE#HASH anchors for the file.\n- If read output is
+          truncated, continue with the offset it names — never guess unseen
+          lines.\n- Use raw: true when reading for context only; anchors are
+          required for edit.\n- Use edit with LINE#HASH anchors from the latest
+          read, grep, or edit result for all file changes; batch every change to
+          one file into a single edit call.\n- Never reuse anchors from an
+          earlier read or edit response once a newer one exists for the same
+          file; treat only the most recent response as carrying valid
+          anchors.\n- After a successful edit, the returned --- Anchors ---
+          block replaces a re-read for nearby follow-up edits.\n- On
+          [E_STALE_ANCHOR], the error lists the stale refs and any
+          content-matched candidate anchors; re-read the file to get current
+          anchors before retrying.\n- Use write only for new files or complete
+          rewrites.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n\nPi documentation (read only when the user
+          asks about pi itself, its SDK, extensions, themes, skills, or TUI):\n-
+          Main documentation:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md)\n- When working on pi topics, read the
+          docs and examples, and follow .md cross-references before
+          implementing\n- Always read pi .md files completely and follow links
+          to related docs (e.g., tui.md for TUI API details)\nCurrent working
+          directory:
+          /tmp/pimacs-hashline-e2e-vmeAnl/project"},{"role":"user","content":[{"type":"text","text":"Use
+          the grep tool exactly once to find beta in sample.txt, then finish. Do
+          not use any other
+          tool."}]}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file. Every line returns as `LINE#HASH:content`; copy those
+          anchors verbatim into `edit` — they are the only way edits address
+          lines.\n\nPage large files with `offset` (1-based line) and `limit`.
+          Default cap: 2000 lines or 50.0KB; truncated output ends with the
+          exact `offset` to continue from.\n\nSupported images return as
+          attachments (no anchors); binary files and directories are rejected.
+          An empty file returns an advisory — insert content with edit
+          `prepend`/`append`, omitting `pos`.\n\nNon-UTF-8 bytes read through as
+          U+FFFD and the output is flagged: editing such a file rewrites it as
+          UTF-8. Recover the original encoding with `iconv` afterwards if it
+          must survive.\n\nSet `raw: true` to return plain file content without
+          `LINE#HASH` prefixes; offset, limit, and truncation notices still
+          apply.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"},"raw":{"type":"boolean","description":"Return plain text
+          without LINE#HASH anchors. Saves tokens when you do not plan to edit
+          this
+          file."}}},"strict":false}},{"type":"function","function":{"name":"edit","description":"Patch
+          a text file at `LINE#HASH` anchors copied verbatim from the latest
+          read/grep result or the anchors block of a previous edit.\n\nBatch
+          every change to a file into one `edit` call: all operations go in the
+          `edits` array, every edit sets `op`, and all anchors must come from
+          the same pre-edit read. Edits validate against one snapshot and apply
+          together, so line numbers never shift between entries of the same
+          call.\n\nOps:\n- `replace` — replace the single line at `pos`, or the
+          inclusive span `pos`..`end`. `lines` is the complete new content for
+          the whole span; `lines: []` deletes it. Without `end`, exactly one
+          line is replaced no matter how many entries `lines` has.\n- `append` —
+          insert `lines` after `pos`; omit `pos` to append at end of file.\n-
+          `prepend` — insert `lines` before `pos`; omit `pos` to insert at start
+          of file.\n- `replace_text` — `{ \"op\": \"replace_text\", \"oldText\":
+          ..., \"newText\": ... }` replaces one exact, unique occurrence and
+          fails otherwise. Prefer anchors; use this only when uniqueness is
+          certain. `oldText`/`newText` are invalid on any other op.\n\nExample —
+          single-line and span replace in one call:\n```json\n{ \"path\":
+          \"src/main.ts\", \"edits\": [\n  { \"op\": \"replace\", \"pos\":
+          \"12#MQ\", \"lines\": [\"const x = 1;\"] },\n  { \"op\": \"replace\",
+          \"pos\": \"5#VR\", \"end\": \"8#QV\", \"lines\": [\n    \"function
+          greet(name) {\",\n    \"  return `Hello, ${name}`;\",\n    \"}\"\n  ]
+          }\n] }\n```\n\nRules:\n- `lines` is literal file content with exact
+          indentation. Never include `LINE#HASH:` or bare `HH:` prefixes, diff
+          `+`/`-` markers, or a copy of a neighboring line — the `:content` part
+          of an anchor is context for you, not payload, and repeating a boundary
+          line duplicates it in the file.\n- Anchors are opaque: copy them
+          exactly, never compute, shift, or guess one.\n- An anchor may keep the
+          `:content` suffix from read output (`\"12#MQ: const x = 1;\"`). The
+          runtime cross-checks that content against the file — catching hash
+          collisions and recovering whitespace-only drift — so keep it for
+          high-risk anchors such as range endpoints. Copy the content as
+          rendered; if you shorten it, keep the start of the line and mark the
+          cut with `...`.\n- Edits in one call must not overlap or touch
+          adjacent lines — merge such changes into a single
+          edit.","parameters":{"type":"object","required":["path","edits"],"properties":{"path":{"type":"string","description":"path"},"edits":{"type":"array","items":{"anyOf":[{"type":"object","required":["op","pos","lines"],"properties":{"op":{"type":"string","enum":["replace"],"description":"replace
+          one line at pos, or an inclusive pos..end range, with
+          lines"},"pos":{"type":"string","description":"start anchor (LINE#HASH
+          from read)"},"end":{"type":"string","description":"inclusive end
+          anchor (LINE#HASH) of the range to replace; omit to replace only the
+          line at
+          pos"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","lines"],"properties":{"op":{"type":"string","enum":["append"],"description":"insert
+          lines after pos; omit pos to append at
+          EOF"},"pos":{"type":"string","description":"anchor (LINE#HASH from
+          read) to insert
+          after"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","lines"],"properties":{"op":{"type":"string","enum":["prepend"],"description":"insert
+          lines before pos; omit pos to prepend at
+          BOF"},"pos":{"type":"string","description":"anchor (LINE#HASH from
+          read) to insert
+          before"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","oldText","newText"],"properties":{"op":{"type":"string","enum":["replace_text"],"description":"replace
+          an exact unique substring with
+          newText"},"oldText":{"type":"string","description":"exact text to
+          replace; must be unique in the
+          file"},"newText":{"type":"string","description":"replacement
+          text"}},"additionalProperties":false}],"description":"discriminated
+          edit item. \"replace\" uses pos/end/lines; \"append\" and \"prepend\"
+          use optional pos + lines; \"replace_text\" uses
+          oldText/newText."},"description":"edits over
+          $path"}},"additionalProperties":false},"strict":false}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
+          files using ripgrep. Every matched line returns as `LINE#HASH:content`
+          — copy those anchors verbatim into `edit` without a prior
+          `read`.\n\nThe `pattern` is a regular expression unless `literal:
+          true`. Results respect `.gitignore` by default (ripgrep's default).
+          Use `path` to scope to a file or directory; use `glob` to filter by
+          filename pattern (e.g. `\"**/*.ts\"`).\n\nSet `context` (0–5) to
+          include surrounding lines around each match. Set `limit` to cap
+          matched lines (default 50, max 200).\n\nWhen results are too broad,
+          narrow in this order: read the match count first, then scope with
+          `path`/`glob`, then tighten `pattern`, and only add `context` once the
+          set is
+          small.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex unless literal:
+          true)"},"path":{"type":"string","description":"File or directory to
+          search (defaults to
+          cwd)"},"glob":{"type":"string","description":"Filename glob filter,
+          e.g.
+          \"**/*.ts\""},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          matching"},"literal":{"type":"boolean","description":"Treat pattern as
+          a literal string, not a
+          regex"},"context":{"type":"integer","minimum":0,"maximum":5,"description":"Number
+          of context lines to show around each match (0–5, default
+          0)"},"limit":{"type":"integer","minimum":1,"maximum":200,"description":"Maximum
+          matched lines to return (default 50, max
+          200)"}}},"strict":false}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Tue, 11 Aug 2026 17:06:10 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          user"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          wants"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          me"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"grep"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tool"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          exactly"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          once"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          find"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467970,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          in"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          and"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          then"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          stop"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          should"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          not"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          any"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          other"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tool"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nPlan"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":":"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"grep"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467971,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          search"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          for"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          in"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n2"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Finish"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          as"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          requested"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467972,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467973,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_l2tbl11e","index":0,"type":"function","function":{"name":"grep","arguments":"{\"pattern\":\"beta\",\"path\":\"sample.txt\"}"}}]},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467973,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+
+          data:
+          {"id":"chatcmpl-541","object":"chat.completion.chunk","created":1786467973,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":2904,"completion_tokens":90,"total_tokens":2994}}
+
+
+          data: [DONE]
+
+        compression: none
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:35589
+        connection: keep-alive
+        accept: application/json
+        user-agent: OpenAI/JS 6.26.0
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 6.26.0
+        x-stainless-os: Linux
+        x-stainless-arch: x64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.1
+        authorization: Bearer fixture
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '11729'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\nAvailable tools:\n- read: Read file
+          contents as LINE#HASH-anchored lines; edit requires these anchors\n-
+          edit: Make precise file edits at LINE#HASH anchors (e.g. 5#MQ) copied
+          from read, batching all edits to a file in one call\n- write: Create
+          or overwrite files\n- grep: Search files with ripgrep; results carry
+          LINE#HASH anchors usable directly in edit\n\nIn addition to the tools
+          above, you may have access to other custom tools depending on the
+          project.\n\nGuidelines:\n- Use read before edit whenever you do not
+          hold current LINE#HASH anchors for the file.\n- If read output is
+          truncated, continue with the offset it names — never guess unseen
+          lines.\n- Use raw: true when reading for context only; anchors are
+          required for edit.\n- Use edit with LINE#HASH anchors from the latest
+          read, grep, or edit result for all file changes; batch every change to
+          one file into a single edit call.\n- Never reuse anchors from an
+          earlier read or edit response once a newer one exists for the same
+          file; treat only the most recent response as carrying valid
+          anchors.\n- After a successful edit, the returned --- Anchors ---
+          block replaces a re-read for nearby follow-up edits.\n- On
+          [E_STALE_ANCHOR], the error lists the stale refs and any
+          content-matched candidate anchors; re-read the file to get current
+          anchors before retrying.\n- Use write only for new files or complete
+          rewrites.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n\nPi documentation (read only when the user
+          asks about pi itself, its SDK, extensions, themes, skills, or TUI):\n-
+          Main documentation:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md)\n- When working on pi topics, read the
+          docs and examples, and follow .md cross-references before
+          implementing\n- Always read pi .md files completely and follow links
+          to related docs (e.g., tui.md for TUI API details)\nCurrent working
+          directory:
+          /tmp/pimacs-hashline-e2e-vmeAnl/project"},{"role":"user","content":[{"type":"text","text":"Use
+          the grep tool exactly once to find beta in sample.txt, then finish. Do
+          not use any other
+          tool."}]},{"role":"assistant","content":null,"reasoning":"The user
+          wants me to use the `grep` tool exactly once to find \"beta\" in
+          \"sample.txt\" and then stop. I should not use any other
+          tool.\n\nPlan:\n1. Use `grep` to search for \"beta\" in
+          \"sample.txt\".\n2. Finish as
+          requested.","tool_calls":[{"id":"call_l2tbl11e","type":"function","function":{"name":"grep","arguments":"{\"pattern\":\"beta\",\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"sample.txt:\n2#JB:beta\n---\n1
+          match in 1
+          file.","tool_call_id":"call_l2tbl11e"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file. Every line returns as `LINE#HASH:content`; copy those
+          anchors verbatim into `edit` — they are the only way edits address
+          lines.\n\nPage large files with `offset` (1-based line) and `limit`.
+          Default cap: 2000 lines or 50.0KB; truncated output ends with the
+          exact `offset` to continue from.\n\nSupported images return as
+          attachments (no anchors); binary files and directories are rejected.
+          An empty file returns an advisory — insert content with edit
+          `prepend`/`append`, omitting `pos`.\n\nNon-UTF-8 bytes read through as
+          U+FFFD and the output is flagged: editing such a file rewrites it as
+          UTF-8. Recover the original encoding with `iconv` afterwards if it
+          must survive.\n\nSet `raw: true` to return plain file content without
+          `LINE#HASH` prefixes; offset, limit, and truncation notices still
+          apply.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"},"raw":{"type":"boolean","description":"Return plain text
+          without LINE#HASH anchors. Saves tokens when you do not plan to edit
+          this
+          file."}}},"strict":false}},{"type":"function","function":{"name":"edit","description":"Patch
+          a text file at `LINE#HASH` anchors copied verbatim from the latest
+          read/grep result or the anchors block of a previous edit.\n\nBatch
+          every change to a file into one `edit` call: all operations go in the
+          `edits` array, every edit sets `op`, and all anchors must come from
+          the same pre-edit read. Edits validate against one snapshot and apply
+          together, so line numbers never shift between entries of the same
+          call.\n\nOps:\n- `replace` — replace the single line at `pos`, or the
+          inclusive span `pos`..`end`. `lines` is the complete new content for
+          the whole span; `lines: []` deletes it. Without `end`, exactly one
+          line is replaced no matter how many entries `lines` has.\n- `append` —
+          insert `lines` after `pos`; omit `pos` to append at end of file.\n-
+          `prepend` — insert `lines` before `pos`; omit `pos` to insert at start
+          of file.\n- `replace_text` — `{ \"op\": \"replace_text\", \"oldText\":
+          ..., \"newText\": ... }` replaces one exact, unique occurrence and
+          fails otherwise. Prefer anchors; use this only when uniqueness is
+          certain. `oldText`/`newText` are invalid on any other op.\n\nExample —
+          single-line and span replace in one call:\n```json\n{ \"path\":
+          \"src/main.ts\", \"edits\": [\n  { \"op\": \"replace\", \"pos\":
+          \"12#MQ\", \"lines\": [\"const x = 1;\"] },\n  { \"op\": \"replace\",
+          \"pos\": \"5#VR\", \"end\": \"8#QV\", \"lines\": [\n    \"function
+          greet(name) {\",\n    \"  return `Hello, ${name}`;\",\n    \"}\"\n  ]
+          }\n] }\n```\n\nRules:\n- `lines` is literal file content with exact
+          indentation. Never include `LINE#HASH:` or bare `HH:` prefixes, diff
+          `+`/`-` markers, or a copy of a neighboring line — the `:content` part
+          of an anchor is context for you, not payload, and repeating a boundary
+          line duplicates it in the file.\n- Anchors are opaque: copy them
+          exactly, never compute, shift, or guess one.\n- An anchor may keep the
+          `:content` suffix from read output (`\"12#MQ: const x = 1;\"`). The
+          runtime cross-checks that content against the file — catching hash
+          collisions and recovering whitespace-only drift — so keep it for
+          high-risk anchors such as range endpoints. Copy the content as
+          rendered; if you shorten it, keep the start of the line and mark the
+          cut with `...`.\n- Edits in one call must not overlap or touch
+          adjacent lines — merge such changes into a single
+          edit.","parameters":{"type":"object","required":["path","edits"],"properties":{"path":{"type":"string","description":"path"},"edits":{"type":"array","items":{"anyOf":[{"type":"object","required":["op","pos","lines"],"properties":{"op":{"type":"string","enum":["replace"],"description":"replace
+          one line at pos, or an inclusive pos..end range, with
+          lines"},"pos":{"type":"string","description":"start anchor (LINE#HASH
+          from read)"},"end":{"type":"string","description":"inclusive end
+          anchor (LINE#HASH) of the range to replace; omit to replace only the
+          line at
+          pos"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","lines"],"properties":{"op":{"type":"string","enum":["append"],"description":"insert
+          lines after pos; omit pos to append at
+          EOF"},"pos":{"type":"string","description":"anchor (LINE#HASH from
+          read) to insert
+          after"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","lines"],"properties":{"op":{"type":"string","enum":["prepend"],"description":"insert
+          lines before pos; omit pos to prepend at
+          BOF"},"pos":{"type":"string","description":"anchor (LINE#HASH from
+          read) to insert
+          before"},"lines":{"type":"array","items":{"type":"string"},"description":"replacement
+          content, one array entry per line, no LINE#HASH
+          prefix"}},"additionalProperties":false},{"type":"object","required":["op","oldText","newText"],"properties":{"op":{"type":"string","enum":["replace_text"],"description":"replace
+          an exact unique substring with
+          newText"},"oldText":{"type":"string","description":"exact text to
+          replace; must be unique in the
+          file"},"newText":{"type":"string","description":"replacement
+          text"}},"additionalProperties":false}],"description":"discriminated
+          edit item. \"replace\" uses pos/end/lines; \"append\" and \"prepend\"
+          use optional pos + lines; \"replace_text\" uses
+          oldText/newText."},"description":"edits over
+          $path"}},"additionalProperties":false},"strict":false}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
+          files using ripgrep. Every matched line returns as `LINE#HASH:content`
+          — copy those anchors verbatim into `edit` without a prior
+          `read`.\n\nThe `pattern` is a regular expression unless `literal:
+          true`. Results respect `.gitignore` by default (ripgrep's default).
+          Use `path` to scope to a file or directory; use `glob` to filter by
+          filename pattern (e.g. `\"**/*.ts\"`).\n\nSet `context` (0–5) to
+          include surrounding lines around each match. Set `limit` to cap
+          matched lines (default 50, max 200).\n\nWhen results are too broad,
+          narrow in this order: read the match count first, then scope with
+          `path`/`glob`, then tighten `pattern`, and only add `context` once the
+          set is
+          small.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex unless literal:
+          true)"},"path":{"type":"string","description":"File or directory to
+          search (defaults to
+          cwd)"},"glob":{"type":"string","description":"Filename glob filter,
+          e.g.
+          \"**/*.ts\""},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          matching"},"literal":{"type":"boolean","description":"Treat pattern as
+          a literal string, not a
+          regex"},"context":{"type":"integer","minimum":0,"maximum":5,"description":"Number
+          of context lines to show around each match (0–5, default
+          0)"},"limit":{"type":"integer","minimum":1,"maximum":200,"description":"Maximum
+          matched lines to return (default 50, max
+          200)"}}},"strict":false}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Tue, 11 Aug 2026 17:06:14 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          have"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          used"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          grep"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tool"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          exactly"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          once"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          and"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467974,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          found"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          in"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          user"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          asked"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          me"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          finish"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          after"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          that"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          term"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          was"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          found"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          in"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467975,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          at"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          line"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          "},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"2"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop"}]}
+
+
+          data:
+          {"id":"chatcmpl-560","object":"chat.completion.chunk","created":1786467976,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":3025,"completion_tokens":51,"total_tokens":3076}}
+
+
+          data: [DONE]
+
+        compression: none

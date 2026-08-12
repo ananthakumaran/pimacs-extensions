@@ -1,0 +1,8 @@
+{
+  "defaultProvider": "fixture",
+  "defaultModel": "gemma4:12b",
+  "defaultThinkingLevel": "low",
+  "retry": {
+    "enabled": false
+  }
+}

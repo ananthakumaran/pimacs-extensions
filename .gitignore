@@ -1,0 +1,6 @@
+.cask
+*.elc
+*~
+node_modules
+.npm-cache
+integration/project/agent/sessions/

@@ -1,0 +1,25 @@
+{
+  "name": "pimacs-extensions-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Record and replay provider requests for Pimacs extension integration tests",
+  "type": "module",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ]
+  },
+  "dependencies": {
+    "pi-hashline-edit": "^0.8.3",
+    "proxay": "^1.9.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.84.1",
+    "@types/node": "^22.0.0",
+    "typescript": "^6.0.3"
+  },
+  "license": "GPL-3.0-or-later"
+}
