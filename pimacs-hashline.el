@@ -103,7 +103,7 @@
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
   (funcall inserter
-           (if (plist-get args :raw)
+           (if (eq (plist-get args :raw) t)
                content
              (pimacs-hashline--strip-content-prefixes content))
            details args))

@@ -17,6 +17,7 @@
 (require 'ert)
 (require 'pimacs)
 (require 'pimacs-extensions)
+(require 'pimacs-hashline)
 
 (defconst pimacs-extensions--integration-directory
   (file-name-directory
@@ -47,6 +48,17 @@
   (replace-regexp-in-string
    (regexp-quote pimacs-extensions--project-directory)
    "PROJECT_DIR" text))
+
+(ert-deftest pimacs-extensions-hashline-strips-json-false-raw ()
+  (let (inserted)
+    (pimacs-hashline--insert-read-result
+     (lambda (content _details _args) (setq inserted content))
+     '((:type "text" :text "296#WP:(defun pimacs--start-agent (key)"))
+     nil
+     '(:raw json-false))
+    (should
+     (equal inserted
+            '((:type "text" :text "(defun pimacs--start-agent (key)"))))))
 
 (defun pimacs-extensions--check-tape (scenario suffix text)
   (let* ((tape-file
