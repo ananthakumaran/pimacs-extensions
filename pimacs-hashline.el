@@ -87,9 +87,7 @@
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
   (funcall inserter
-           (if (eq (plist-get args :raw) t)
-               content
-             (pimacs-hashline--strip-content-prefixes content))
+           (pimacs-hashline--strip-content-prefixes content)
            details args))
 
 (defun pimacs-hashline--insert-write-result (inserter content details args)
@@ -98,7 +96,7 @@
            (pimacs-hashline--strip-auto-read-content content)
            details args))
 
-(defun pimacs-hashline--insert-edit-result (inserter content details args)
+(defun pimacs-hashline--insert-replace-result (inserter content details args)
   "Normalize hashline replace DETAILS and delegate to INSERTER."
   (let ((details (copy-sequence details)))
     (when-let ((diff (plist-get details :diff)))
@@ -106,8 +104,7 @@
                                (pimacs-hashline--normalize-diff diff))))
     (let ((metrics (plist-get details :metrics)))
       (funcall inserter
-               (if (or (equal (plist-get details :classification) "applied")
-                       (equal (plist-get metrics :classification) "applied"))
+               (if (equal (plist-get metrics :classification) "applied")
                    nil
                  content)
                details args))))
@@ -144,9 +141,9 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   (pimacs-hashline--wrap-result-inserter
    "write" #'pimacs-hashline--insert-write-result)
   (pimacs-hashline--wrap-result-inserter
-   "replace" #'pimacs-hashline--insert-edit-result "edit")
+   "replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
-   "undo_last_replace" #'pimacs-hashline--insert-edit-result "edit")
+   "undo_last_replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--alias-tool-args "replace" "edit")
   (pimacs-hashline--alias-tool-args "undo_last_replace" "edit"))
 
