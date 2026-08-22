@@ -1,0 +1,53 @@
+user> Use the write tool exactly once to create /tmp/test1.md with this exact content, then finish without using any other tool:
+# Test File 1
+
+This is a second test markdown file.
+
+## Sample Content
+
+- Item 1
+- Item 2
+- Item 3
+
+Additional content can be added below.
+
+assistant> The user wants me to create a file `/tmp/test1.md` with specific
+content using the `write` tool exactly once.
+
+Content:
+```markdown
+# Test File 1
+
+This is a second test markdown file.
+
+## Sample Content
+
+- Item 1
+- Item 2
+- Item 3
+
+Additional content can be added below.
+```
+
+I need to ensure I use the `write` tool exactly once and no other
+tools.
+
+write /tmp/test1.md
+# Test File 1
+
+This is a second test markdown file.
+
+## Sample Content
+
+- Item 1
+- Item 2
+- Item 3
+
+Additional content can be added below.
+Successfully wrote 138 bytes to /tmp/test1.md
+
+assistant> I have successfully created the file /tmp/test1.md with the specified content.
+
+
+ user> 
+  

@@ -60,6 +60,18 @@
      (equal inserted
             '((:type "text" :text "(defun pimacs--start-agent (key)"))))))
 
+(ert-deftest pimacs-extensions-hashline-hides-write-auto-read ()
+  (let (inserted)
+    (pimacs-hashline--insert-write-result
+     (lambda (content _details _args) (setq inserted content))
+     '((:type "text" :text "Successfully wrote 139 bytes")
+       (:type "text" :text "\n\n--- Auto-read (hashline anchors) ---\n6D3│# Test File 1\nAuN│\nAGe│This is a second test markdown file.\nBHf│\nVon│## Sample Content\nWpo│\niZ9│- Item 1\nXjt│- Item 2\nqsJ│- Item 3\nrtK│\no9h│Additional content can be added below."))
+     nil nil)
+    (should
+     (equal inserted
+            '((:type "text" :text "Successfully wrote 139 bytes")
+              (:type "text" :text ""))))))
+
 (defun pimacs-extensions--check-tape (scenario suffix text)
   (let* ((tape-file
           (expand-file-name (concat scenario suffix)
@@ -184,5 +196,11 @@
    "hashline-undo"
    (pimacs-extensions--send-prompt-and-wait
     "Read sample.txt, replace beta with BETA using replace, then undo it with undo_last_replace, then finish.")))
+
+(ert-deftest pimacs-extensions-hashline-write ()
+  (pimacs-extensions--with-integration-project
+   "hashline-write"
+   (pimacs-extensions--send-prompt-and-wait
+    "Use the write tool exactly once to create /tmp/test1.md with this exact content, then finish without using any other tool:\n# Test File 1\n\nThis is a second test markdown file.\n\n## Sample Content\n\n- Item 1\n- Item 2\n- Item 3\n\nAdditional content can be added below.")))
 
 ;;; pimacs-extensions-integration-tests.el ends here

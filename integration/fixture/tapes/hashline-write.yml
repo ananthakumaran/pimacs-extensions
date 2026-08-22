@@ -1,0 +1,830 @@
+http_interactions:
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:38857
+        connection: keep-alive
+        accept: application/json
+        user-agent: OpenAI/JS 6.40.0
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 6.40.0
+        x-stainless-os: Linux
+        x-stainless-arch: x64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.1
+        authorization: Bearer fixture
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '8335'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\nAvailable tools:\n- read: Read a file;
+          each line returned as HASH│content\n- replace: Replace lines in a text
+          file via bare 3-char HASH anchors from read — hash only, never line
+          content; anchor exactly the lines that change; one edit per tool
+          call\n- write: Create or overwrite files\n- undo_last_replace: Undo
+          the last replace on a file\n\nIn addition to the tools above, you may
+          have access to other custom tools depending on the
+          project.\n\nGuidelines:\n- `read`: call before `replace` when you need
+          fresh HASH anchors for a file.\n- `read`: call again after any edit to
+          that file — changed lines get new anchors (the post-edit diff rows
+          from replace/undo also carry fresh anchors for the changed range).\n-
+          `replace`: remove_from and remove_to take ONLY the bare 3-char hash —
+          read row `ve7│function hello() {` means `\"remove_from\": \"ve7\"`.
+          Never paste the line content, a code line, a paragraph, or the whole
+          `HASH│content` row into these fields.\n- `replace`: remove_from and
+          remove_to mark the exact lines that are REMOVED, and replacement_lines
+          is their complete replacement applied in order; nothing outside the
+          range changes. Every line inside the range that is not reproduced
+          byte-exact in replacement_lines is deleted from the file.\n-
+          `replace`: keep the range as tight as the change — anchor only the
+          first and last line that actually change, never a whole function,
+          class, or import block when only part of it changes.\n- `replace`: to
+          replace a single line, set both remove_from and remove_to to the same
+          hash: remove_from: \"<HASH>\", remove_to: \"<HASH>\".\n- `replace`:
+          when copying a line from read output, remove its HASH│ prefix and keep
+          the leading whitespace exactly as shown.\n- `replace`:
+          replacement_lines is an array of strings, one element per line. Mirror
+          the removed lines exactly, blank lines included: use `[]` to delete
+          the range, `[\"\"]` for a single blank line, `[\"a\", \"\"]` for a
+          line followed by a blank line, and `[\"\", \"\"]` for two blank lines.
+          Do not embed `\\n` inside an element — each element is exactly one
+          line.\n- `replace`: when auto-read shows the post-edit diff, its rows
+          are the fresh anchors for the new file — `+HASH│` and ` HASH│` rows
+          carry current hashes and unchanged lines keep their previous hashes,
+          so you can anchor follow-up edits on the diff without re-reading.\n-
+          `replace`: do not issue multiple replace calls on the same file in one
+          message. Issue the next edit only after verifying the previous
+          diff.\n- Use write only for new files or complete rewrites.\n-
+          `undo_last_replace`: reverts only the most recent replace on the file
+          — any write to the file clears the undo history, so call it
+          immediately after a bad replace. A replace is bad when its post-edit
+          diff shows `-HASH│` rows for lines you meant to keep (a closing brace,
+          import, or declaration).\n- `undo_last_replace`: when auto-read shows
+          the post-edit diff, its `+HASH│` and ` HASH│` rows are the fresh
+          anchors for the restored file, so follow-up edits can anchor on the
+          diff without re-reading.\n- Be concise in your responses\n- Show file
+          paths clearly when working with files\n\nPi documentation (read only
+          when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md)\n- When working on pi topics, read the
+          docs and examples, and follow .md cross-references before
+          implementing\n- Always read pi .md files completely and follow links
+          to related docs (e.g., tui.md for TUI API details)\nCurrent working
+          directory:
+          /home/ananthakumaran/work/repos/pimacs-extensions/integration/project"},{"role":"user","content":[{"type":"text","text":"Use
+          the write tool exactly once to create /tmp/test1.md with this exact
+          content, then finish without using any other tool:\n# Test File
+          1\n\nThis is a second test markdown file.\n\n## Sample Content\n\n-
+          Item 1\n- Item 2\n- Item 3\n\nAdditional content can be added
+          below."}]}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file; each line returned as HASH│content with a 3-char
+          alphanumeric hash. No line numbers — use the HASH as the anchor in
+          replace calls. Images → visual attachments; Binary/directory →
+          rejected; UTF-16/UTF-32 (BOM) → rejected; empty → HASH│ (replace to
+          insert); pageable with offset/limit; BOM stripped; non-UTF-8 shown as
+          U+FFFD.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}},"strict":false}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines in a text file, targeted by the 3-char HASH anchors
+          from read output. remove_from and remove_to must each be a BARE
+          3-character hash: copy only the hash from the leftmost column of a
+          read row (row `ve7│function hello() {` means `\"remove_from\":
+          \"ve7\"`). Never pass the line content, a code line, or a paragraph
+          into these
+          fields.","parameters":{"type":"object","required":["remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to edit. Required — always provide it explicitly; it is only
+          auto-resolved from the anchors as a fallback when omitted by
+          mistake."},"remove_from":{"type":"string","description":"Bare 3-char
+          HASH only (e.g. \"aB3\") — copy just the hash from the leftmost column
+          of a read row like `aB3│content`; never the line content. Marks the
+          FIRST line to remove
+          (inclusive)"},"remove_to":{"type":"string","description":"Bare 3-char
+          HASH only (e.g. \"aB3\") — copy just the hash from the leftmost column
+          of a read row like `aB3│content`; never the line content. Marks the
+          LAST line to remove
+          (inclusive)"},"replacement_lines":{"type":"array","items":{"type":"string","description":"One
+          replacement line. Each element is exactly one line; do not embed \\n
+          inside an element — use separate
+          elements."},"description":"Replacement lines as an array of strings,
+          one element per line. Use [] to delete the
+          range."}},"additionalProperties":false},"strict":false}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}},"strict":false}},{"type":"function","function":{"name":"undo_last_replace","description":"Undo
+          the last replace on a file, reverting it to its previous state. Use
+          when a replace produced incorrect results (e.g., wrong content,
+          duplicated lines, broken
+          syntax).","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}},"strict":false}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Sat, 22 Aug 2026 04:46:37 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          user"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          wants"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          me"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          create"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          a"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          file"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `/"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"tmp"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"/"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"test"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"md"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          with"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          specific"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          content"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          using"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"write"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tool"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          exactly"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373997,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          once"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nContent"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":":"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n```"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"markdown"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n#"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Test"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          File"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nThis"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          is"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          a"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          second"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          test"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          markdown"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          file"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\n##"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Content"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\n-"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373998,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Item"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n-"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Item"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          2"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n-"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Item"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          3"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nAdditional"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          content"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          can"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          be"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          added"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          below"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n```"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nI"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          need"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          ensure"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787373999,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"write"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tool"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          exactly"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          once"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          and"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          no"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          other"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tools"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374000,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374002,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_ojnbwym0","index":0,"type":"function","function":{"name":"write","arguments":"{\"content\":\"#
+          Test File 1\\n\\nThis is a second test markdown file.\\n\\n## Sample
+          Content\\n\\n- Item 1\\n- Item 2\\n- Item 3\\n\\nAdditional content
+          can be added
+          below.\",\"path\":\"/tmp/test1.md\"}"}}]},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374002,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+
+          data:
+          {"id":"chatcmpl-760","object":"chat.completion.chunk","created":1787374002,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":1994,"completion_tokens":166,"total_tokens":2160}}
+
+
+          data: [DONE]
+
+        compression: none
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:38857
+        connection: keep-alive
+        accept: application/json
+        user-agent: OpenAI/JS 6.40.0
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 6.40.0
+        x-stainless-os: Linux
+        x-stainless-arch: x64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.1
+        authorization: Bearer fixture
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '9416'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\nAvailable tools:\n- read: Read a file;
+          each line returned as HASH│content\n- replace: Replace lines in a text
+          file via bare 3-char HASH anchors from read — hash only, never line
+          content; anchor exactly the lines that change; one edit per tool
+          call\n- write: Create or overwrite files\n- undo_last_replace: Undo
+          the last replace on a file\n\nIn addition to the tools above, you may
+          have access to other custom tools depending on the
+          project.\n\nGuidelines:\n- `read`: call before `replace` when you need
+          fresh HASH anchors for a file.\n- `read`: call again after any edit to
+          that file — changed lines get new anchors (the post-edit diff rows
+          from replace/undo also carry fresh anchors for the changed range).\n-
+          `replace`: remove_from and remove_to take ONLY the bare 3-char hash —
+          read row `ve7│function hello() {` means `\"remove_from\": \"ve7\"`.
+          Never paste the line content, a code line, a paragraph, or the whole
+          `HASH│content` row into these fields.\n- `replace`: remove_from and
+          remove_to mark the exact lines that are REMOVED, and replacement_lines
+          is their complete replacement applied in order; nothing outside the
+          range changes. Every line inside the range that is not reproduced
+          byte-exact in replacement_lines is deleted from the file.\n-
+          `replace`: keep the range as tight as the change — anchor only the
+          first and last line that actually change, never a whole function,
+          class, or import block when only part of it changes.\n- `replace`: to
+          replace a single line, set both remove_from and remove_to to the same
+          hash: remove_from: \"<HASH>\", remove_to: \"<HASH>\".\n- `replace`:
+          when copying a line from read output, remove its HASH│ prefix and keep
+          the leading whitespace exactly as shown.\n- `replace`:
+          replacement_lines is an array of strings, one element per line. Mirror
+          the removed lines exactly, blank lines included: use `[]` to delete
+          the range, `[\"\"]` for a single blank line, `[\"a\", \"\"]` for a
+          line followed by a blank line, and `[\"\", \"\"]` for two blank lines.
+          Do not embed `\\n` inside an element — each element is exactly one
+          line.\n- `replace`: when auto-read shows the post-edit diff, its rows
+          are the fresh anchors for the new file — `+HASH│` and ` HASH│` rows
+          carry current hashes and unchanged lines keep their previous hashes,
+          so you can anchor follow-up edits on the diff without re-reading.\n-
+          `replace`: do not issue multiple replace calls on the same file in one
+          message. Issue the next edit only after verifying the previous
+          diff.\n- Use write only for new files or complete rewrites.\n-
+          `undo_last_replace`: reverts only the most recent replace on the file
+          — any write to the file clears the undo history, so call it
+          immediately after a bad replace. A replace is bad when its post-edit
+          diff shows `-HASH│` rows for lines you meant to keep (a closing brace,
+          import, or declaration).\n- `undo_last_replace`: when auto-read shows
+          the post-edit diff, its `+HASH│` and ` HASH│` rows are the fresh
+          anchors for the restored file, so follow-up edits can anchor on the
+          diff without re-reading.\n- Be concise in your responses\n- Show file
+          paths clearly when working with files\n\nPi documentation (read only
+          when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /home/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md)\n- When working on pi topics, read the
+          docs and examples, and follow .md cross-references before
+          implementing\n- Always read pi .md files completely and follow links
+          to related docs (e.g., tui.md for TUI API details)\nCurrent working
+          directory:
+          /home/ananthakumaran/work/repos/pimacs-extensions/integration/project"},{"role":"user","content":[{"type":"text","text":"Use
+          the write tool exactly once to create /tmp/test1.md with this exact
+          content, then finish without using any other tool:\n# Test File
+          1\n\nThis is a second test markdown file.\n\n## Sample Content\n\n-
+          Item 1\n- Item 2\n- Item 3\n\nAdditional content can be added
+          below."}]},{"role":"assistant","content":null,"reasoning":"The user
+          wants me to create a file `/tmp/test1.md` with specific content using
+          the `write` tool exactly once.\n\nContent:\n```markdown\n# Test File
+          1\n\nThis is a second test markdown file.\n\n## Sample Content\n\n-
+          Item 1\n- Item 2\n- Item 3\n\nAdditional content can be added
+          below.\n```\n\nI need to ensure I use the `write` tool exactly once
+          and no other
+          tools.","tool_calls":[{"id":"call_ojnbwym0","type":"function","function":{"name":"write","arguments":"{\"content\":\"#
+          Test File 1\\n\\nThis is a second test markdown file.\\n\\n## Sample
+          Content\\n\\n- Item 1\\n- Item 2\\n- Item 3\\n\\nAdditional content
+          can be added
+          below.\",\"path\":\"/tmp/test1.md\"}"}}]},{"role":"tool","content":"Successfully
+          wrote 138 bytes to /tmp/test1.md\n\n\n--- Auto-read (hashline anchors)
+          ---\n6D3│# Test File 1\nAuN│\nAGe│This is a second test markdown
+          file.\nBHf│\nVon│## Sample Content\nWpo│\niZ9│- Item 1\nXjt│- Item
+          2\nqsJ│- Item 3\nrtK│\no9h│Additional content can be added
+          below.","tool_call_id":"call_ojnbwym0"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file; each line returned as HASH│content with a 3-char
+          alphanumeric hash. No line numbers — use the HASH as the anchor in
+          replace calls. Images → visual attachments; Binary/directory →
+          rejected; UTF-16/UTF-32 (BOM) → rejected; empty → HASH│ (replace to
+          insert); pageable with offset/limit; BOM stripped; non-UTF-8 shown as
+          U+FFFD.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}},"strict":false}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines in a text file, targeted by the 3-char HASH anchors
+          from read output. remove_from and remove_to must each be a BARE
+          3-character hash: copy only the hash from the leftmost column of a
+          read row (row `ve7│function hello() {` means `\"remove_from\":
+          \"ve7\"`). Never pass the line content, a code line, or a paragraph
+          into these
+          fields.","parameters":{"type":"object","required":["remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to edit. Required — always provide it explicitly; it is only
+          auto-resolved from the anchors as a fallback when omitted by
+          mistake."},"remove_from":{"type":"string","description":"Bare 3-char
+          HASH only (e.g. \"aB3\") — copy just the hash from the leftmost column
+          of a read row like `aB3│content`; never the line content. Marks the
+          FIRST line to remove
+          (inclusive)"},"remove_to":{"type":"string","description":"Bare 3-char
+          HASH only (e.g. \"aB3\") — copy just the hash from the leftmost column
+          of a read row like `aB3│content`; never the line content. Marks the
+          LAST line to remove
+          (inclusive)"},"replacement_lines":{"type":"array","items":{"type":"string","description":"One
+          replacement line. Each element is exactly one line; do not embed \\n
+          inside an element — use separate
+          elements."},"description":"Replacement lines as an array of strings,
+          one element per line. Use [] to delete the
+          range."}},"additionalProperties":false},"strict":false}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}},"strict":false}},{"type":"function","function":{"name":"undo_last_replace","description":"Undo
+          the last replace on a file, reverting it to its previous state. Use
+          when a replace produced incorrect results (e.g., wrong content,
+          duplicated lines, broken
+          syntax).","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}},"strict":false}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Sat, 22 Aug 2026 04:46:44 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          have"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          successfully"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          created"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          file"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          /"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"tmp"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"/"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"test"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"md"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          with"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          specified"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          content"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop"}]}
+
+
+          data:
+          {"id":"chatcmpl-406","object":"chat.completion.chunk","created":1787374004,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":2278,"completion_tokens":23,"total_tokens":2301}}
+
+
+          data: [DONE]
+
+        compression: none

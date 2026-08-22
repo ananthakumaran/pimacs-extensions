@@ -22,7 +22,7 @@
 
 ;;; Commentary:
 
-;; Makes the read and replace tools supplied by pi-hashline-edit-pro look like
+;; Makes the read, write, and replace tools supplied by pi-hashline-edit-pro look like
 ;; their built-in Pimacs counterparts.  Hash anchors remain visible to the
 ;; model but are removed from read results displayed in Emacs.  Successful
 ;; replace and undo results display their diff without the model-facing
@@ -46,6 +46,10 @@
   "^-[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
   "Regexp matching a deletion prefix in a hashline diff.")
 
+(defconst pimacs-hashline--auto-read-marker
+  "\n\n--- Auto-read "
+  "Marker for model-only auto-read output appended to write results.")
+
 (defun pimacs-hashline--strip-prefixes (text)
   "Return TEXT without pi-hashline-edit-pro display prefixes."
   (replace-regexp-in-string pimacs-hashline--prefix-regexp "" text))
@@ -58,6 +62,18 @@
                   (plist-put copy :text
                              (pimacs-hashline--strip-prefixes
                               (or (plist-get item :text) ""))))
+              item))
+          content))
+
+(defun pimacs-hashline--strip-auto-read-content (content)
+  "Copy CONTENT and remove model-only auto-read text items."
+  (mapcar (lambda (item)
+            (if (equal (plist-get item :type) "text")
+                (let* ((copy (copy-sequence item))
+                       (text (or (plist-get item :text) ""))
+                       (start (string-match pimacs-hashline--auto-read-marker text)))
+                  (plist-put copy :text
+                             (if start (substring text 0 start) text)))
               item))
           content))
 
@@ -74,6 +90,12 @@
            (if (eq (plist-get args :raw) t)
                content
              (pimacs-hashline--strip-content-prefixes content))
+           details args))
+
+(defun pimacs-hashline--insert-write-result (inserter content details args)
+  "Hide auto-read output from WRITE results displayed in Pimacs."
+  (funcall inserter
+           (pimacs-hashline--strip-auto-read-content content)
            details args))
 
 (defun pimacs-hashline--insert-edit-result (inserter content details args)
@@ -114,10 +136,13 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
     (setf (alist-get tool pimacs-insert-tool-args-functions
                      nil nil #'equal)
           inserter)))
+
 (defun pimacs-hashline-enable ()
   "Install the pi-hashline-edit-pro result inserters."
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
+  (pimacs-hashline--wrap-result-inserter
+   "write" #'pimacs-hashline--insert-write-result)
   (pimacs-hashline--wrap-result-inserter
    "replace" #'pimacs-hashline--insert-edit-result "edit")
   (pimacs-hashline--wrap-result-inserter
