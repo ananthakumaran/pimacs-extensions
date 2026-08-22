@@ -38,7 +38,7 @@
   :group 'pimacs)
 
 (defconst pimacs-extensions--registry
-  '(("pi-hashline-edit" pimacs-hashline pimacs-hashline-enable))
+  '(("pi-hashline-edit-pro" pimacs-hashline pimacs-hashline-enable))
   "Registry of npm package names, features, and setup functions.")
 
 (defun pimacs-enable-extensions (&rest packages)

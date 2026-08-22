@@ -1,4 +1,4 @@
-;;; pimacs-hashline.el --- Pimacs integration for pi-hashline-edit -*- lexical-binding: t; -*-
+;;; pimacs-hashline.el --- Pimacs integration for pi-hashline-edit-pro -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2026 Anantha Kumaran.
 
@@ -22,35 +22,32 @@
 
 ;;; Commentary:
 
-;; Makes the read and edit tools supplied by pi-hashline-edit look like their
-;; built-in Pimacs counterparts.  Hash anchors remain visible to the model but
-;; are removed from read results displayed in Emacs.  Successful edit results
-;; display their diff without the model-facing fresh-anchor block.
+;; Makes the read and replace tools supplied by pi-hashline-edit-pro look like
+;; their built-in Pimacs counterparts.  Hash anchors remain visible to the
+;; model but are removed from read results displayed in Emacs.  Successful
+;; replace and undo results display their diff without the model-facing
+;; fresh-anchor block.
 ;;
-;; Enabled by `(pimacs-enable-extensions "pi-hashline-edit")'.
+;; Enabled by `(pimacs-enable-extensions "pi-hashline-edit-pro")'.
 
 ;;; Code:
 
 (require 'pimacs-extensions)
 
 (defconst pimacs-hashline--prefix-regexp
-  "^[ \t]*[0-9]+#[ZPMQVRWSNKTXJBYH]\\{2,4\\}:"
-  "Regexp matching a pi-hashline-edit line prefix.")
+  "^[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
+  "Regexp matching a pi-hashline-edit-pro line prefix.")
 
 (defconst pimacs-hashline--diff-prefix-regexp
-  "^\\([ +]\\)[ \t]*[0-9]+#[ZPMQVRWSNKTXJBYH]\\{2,4\\}:"
+  "^\\([ +]\\)[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
   "Regexp matching a context or addition prefix in a hashline diff.")
 
 (defconst pimacs-hashline--diff-deletion-prefix-regexp
-  "^-[ \t]*[0-9]+[ ]\\{4,6\\}"
+  "^-[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
   "Regexp matching a deletion prefix in a hashline diff.")
 
-(defconst pimacs-hashline--grep-line-regexp
-  "^[ \t]*\\([0-9]+\\)#[ZPMQVRWSNKTXJBYH]\\{2,4\\}:\\(.*\\)$"
-  "Regexp matching a result line from hashline grep.")
-
 (defun pimacs-hashline--strip-prefixes (text)
-  "Return TEXT without pi-hashline-edit display prefixes."
+  "Return TEXT without pi-hashline-edit-pro display prefixes."
   (replace-regexp-in-string pimacs-hashline--prefix-regexp "" text))
 
 (defun pimacs-hashline--strip-content-prefixes (content)
@@ -71,35 +68,6 @@
     (replace-regexp-in-string
      pimacs-hashline--diff-deletion-prefix-regexp "-" diff)))
 
-(defun pimacs-hashline--normalize-grep-text (text)
-  "Convert hashline grep TEXT to Pimacs' normal file:line format."
-  (let (file output)
-    (dolist (line (split-string text "\n"))
-      (cond
-       ((string-match "^\\(.+\\):$" line)
-        (setq file (match-string 1 line)))
-       ((and file
-             (string-match pimacs-hashline--grep-line-regexp line))
-        (push (format "%s:%s: %s"
-                      file (match-string 1 line) (match-string 2 line))
-              output))
-       ((equal line "---")
-        (setq file nil))
-       (t
-        (push line output))))
-    (mapconcat #'identity (nreverse output) "\n")))
-
-(defun pimacs-hashline--normalize-grep-content (content)
-  "Copy hashline grep CONTENT and normalize its text items."
-  (mapcar (lambda (item)
-            (if (equal (plist-get item :type) "text")
-                (let ((copy (copy-sequence item)))
-                  (plist-put copy :text
-                             (pimacs-hashline--normalize-grep-text
-                              (or (plist-get item :text) ""))))
-              item))
-          content))
-
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
   (funcall inserter
@@ -109,41 +77,53 @@
            details args))
 
 (defun pimacs-hashline--insert-edit-result (inserter content details args)
-  "Normalize hashline edit DETAILS and delegate to INSERTER."
+  "Normalize hashline replace DETAILS and delegate to INSERTER."
   (let ((details (copy-sequence details)))
     (when-let ((diff (plist-get details :diff)))
       (setq details (plist-put details :diff
                                (pimacs-hashline--normalize-diff diff))))
-    (funcall inserter
-             (if (equal (plist-get details :classification) "applied")
-                 nil
-               content)
-             details args)))
+    (let ((metrics (plist-get details :metrics)))
+      (funcall inserter
+               (if (or (equal (plist-get details :classification) "applied")
+                       (equal (plist-get metrics :classification) "applied"))
+                   nil
+                 content)
+               details args))))
 
-(defun pimacs-hashline--insert-grep-result (inserter content details args)
-  "Normalize hashline grep CONTENT and delegate to INSERTER."
-  (funcall inserter
-           (pimacs-hashline--normalize-grep-content content) details args))
-
-(defun pimacs-hashline--wrap-result-inserter (tool wrapper)
-  "Wrap the current result inserter for TOOL with WRAPPER."
-  (let ((inserter (alist-get tool pimacs-insert-tool-result-functions
-                             nil nil #'equal)))
+(defun pimacs-hashline--wrap-result-inserter (tool wrapper &optional source-tool)
+  "Install WRAPPER as the result inserter for TOOL.
+Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
+  (let* ((source-tool (or source-tool tool))
+         (inserter (or (alist-get source-tool pimacs-insert-tool-result-functions
+                                  nil nil #'equal)
+                       (alist-get tool pimacs-insert-tool-result-functions
+                                  nil nil #'equal))))
     (unless (functionp inserter)
-      (error "Pimacs has no result inserter for %s" tool))
+      (error "Pimacs has no result inserter for %s" source-tool))
     (setf (alist-get tool pimacs-insert-tool-result-functions
                      nil nil #'equal)
           (lambda (content details args)
             (funcall wrapper inserter content details args)))))
 
+(defun pimacs-hashline--alias-tool-args (tool source-tool)
+  "Use SOURCE-TOOL's argument inserter for TOOL."
+  (let ((inserter (alist-get source-tool pimacs-insert-tool-args-functions
+                             nil nil #'equal)))
+    (unless (functionp inserter)
+      (error "Pimacs has no argument inserter for %s" source-tool))
+    (setf (alist-get tool pimacs-insert-tool-args-functions
+                     nil nil #'equal)
+          inserter)))
 (defun pimacs-hashline-enable ()
-  "Install the pi-hashline-edit result inserters."
+  "Install the pi-hashline-edit-pro result inserters."
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
   (pimacs-hashline--wrap-result-inserter
-   "edit" #'pimacs-hashline--insert-edit-result)
+   "replace" #'pimacs-hashline--insert-edit-result "edit")
   (pimacs-hashline--wrap-result-inserter
-   "grep" #'pimacs-hashline--insert-grep-result))
+   "undo_last_replace" #'pimacs-hashline--insert-edit-result "edit")
+  (pimacs-hashline--alias-tool-args "replace" "edit")
+  (pimacs-hashline--alias-tool-args "undo_last_replace" "edit"))
 
 (provide 'pimacs-hashline)
 
