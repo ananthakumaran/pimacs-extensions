@@ -1,6 +1,8 @@
 export EMACS ?= $(shell command -v emacs 2>/dev/null)
 CASK_DIR := $(shell cask package-directory)
-CASK_EMACS := cask emacs --batch
+CASK_TREESIT_EXTRA_LOAD_PATH := $(shell $(EMACS) --batch --eval "(princ (mapconcat (lambda (path) path) treesit-extra-load-path path-separator))" 2>/dev/null)
+CASK_TREESIT_EXTRA_LOAD_PATH := $(CASK_TREESIT_EXTRA_LOAD_PATH):$(abspath .cask/tree-sitter)
+CASK_EMACS := PIMACS_TREESIT_EXTRA_LOAD_PATH="$(CASK_TREESIT_EXTRA_LOAD_PATH)" cask emacs --batch --eval '(setq treesit-extra-load-path (split-string (getenv "PIMACS_TREESIT_EXTRA_LOAD_PATH") path-separator t))'
 
 MATCH ?=
 ELISP_FILES := pimacs-extensions.el pimacs-hashline.el
