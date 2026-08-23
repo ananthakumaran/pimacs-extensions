@@ -109,30 +109,39 @@
                  content)
                details args))))
 
+(defun pimacs-hashline--tool-function (tool function-alist)
+  (alist-get tool (symbol-value function-alist) nil nil #'equal))
+
+(defun pimacs-hashline--set-tool-function (tool function-alist function)
+  (let ((alist (symbol-value function-alist)))
+    (setf (alist-get tool alist nil nil #'equal) function)
+    (set function-alist alist)
+    function))
+
+(defun pimacs-hashline--alias-tool-function
+    (tool source-tool function-alist description)
+  (let ((function (pimacs-hashline--tool-function source-tool function-alist)))
+    (unless (functionp function)
+      (error "Pimacs has no %s for %s" description source-tool))
+    (pimacs-hashline--set-tool-function tool function-alist function)))
+
 (defun pimacs-hashline--wrap-result-inserter (tool wrapper &optional source-tool)
   "Install WRAPPER as the result inserter for TOOL.
 Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   (let* ((source-tool (or source-tool tool))
-         (inserter (or (alist-get source-tool pimacs-insert-tool-result-functions
-                                  nil nil #'equal)
-                       (alist-get tool pimacs-insert-tool-result-functions
-                                  nil nil #'equal))))
+         (inserter (or (pimacs-hashline--tool-function
+                        source-tool
+                        'pimacs-insert-tool-result-functions)
+                       (pimacs-hashline--tool-function
+                        tool
+                        'pimacs-insert-tool-result-functions))))
     (unless (functionp inserter)
       (error "Pimacs has no result inserter for %s" source-tool))
-    (setf (alist-get tool pimacs-insert-tool-result-functions
-                     nil nil #'equal)
-          (lambda (content details args)
-            (funcall wrapper inserter content details args)))))
-
-(defun pimacs-hashline--alias-tool-args (tool source-tool)
-  "Use SOURCE-TOOL's argument inserter for TOOL."
-  (let ((inserter (alist-get source-tool pimacs-insert-tool-args-functions
-                             nil nil #'equal)))
-    (unless (functionp inserter)
-      (error "Pimacs has no argument inserter for %s" source-tool))
-    (setf (alist-get tool pimacs-insert-tool-args-functions
-                     nil nil #'equal)
-          inserter)))
+    (pimacs-hashline--set-tool-function
+     tool
+     'pimacs-insert-tool-result-functions
+     (lambda (content details args)
+       (funcall wrapper inserter content details args)))))
 
 (defun pimacs-hashline-enable ()
   "Install the pi-hashline-edit-pro result inserters."
@@ -144,8 +153,24 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
    "replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
    "undo_last_replace" #'pimacs-hashline--insert-replace-result "edit")
-  (pimacs-hashline--alias-tool-args "replace" "edit")
-  (pimacs-hashline--alias-tool-args "undo_last_replace" "edit"))
+  (pimacs-hashline--alias-tool-function
+   "replace" "edit"
+   'pimacs-insert-tool-args-functions "argument inserter")
+  (pimacs-hashline--alias-tool-function
+   "undo_last_replace" "edit"
+   'pimacs-insert-tool-args-functions "argument inserter")
+  (pimacs-hashline--alias-tool-function
+   "replace" "edit"
+   'pimacs-visit-tool-result-functions "result visitor")
+  (pimacs-hashline--alias-tool-function
+   "undo_last_replace" "edit"
+   'pimacs-visit-tool-result-functions "result visitor")
+  (pimacs-hashline--alias-tool-function
+   "replace" "edit"
+   'pimacs-visit-tool-call-functions "call visitor")
+  (pimacs-hashline--alias-tool-function
+   "undo_last_replace" "edit"
+   'pimacs-visit-tool-call-functions "call visitor"))
 
 (provide 'pimacs-hashline)
 
