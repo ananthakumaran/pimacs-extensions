@@ -22,10 +22,10 @@
 
 ;;; Commentary:
 
-;; Makes the read, write, and replace tools supplied by pi-hashline-edit-pro look like
-;; their built-in Pimacs counterparts.  Hash anchors remain visible to the
-;; model but are removed from read results displayed in Emacs.  Successful
-;; replace and undo results display their diff without the model-facing
+;; Makes the read, write, insert, and replace tools supplied by pi-hashline-edit-pro
+;; look like their built-in Pimacs counterparts.  Hash anchors remain visible to
+;; the model but are removed from read and insert results displayed in Emacs.
+;; Successful insert, replace, and undo results display their diff without the model-facing
 ;; fresh-anchor block.
 ;;
 ;; Enabled by `(pimacs-enable-extensions "pi-hashline-edit-pro")'.
@@ -90,6 +90,12 @@
            (pimacs-hashline--strip-content-prefixes content)
            details args))
 
+(defun pimacs-hashline--insert-grep-result (inserter content details args)
+  "Normalize hashline grep CONTENT and delegate to INSERTER."
+  (funcall inserter
+           (pimacs-hashline--strip-content-prefixes content)
+           details args))
+
 (defun pimacs-hashline--insert-write-result (inserter content details args)
   "Hide auto-read output from WRITE results displayed in Pimacs."
   (funcall inserter
@@ -97,7 +103,7 @@
            details args))
 
 (defun pimacs-hashline--insert-replace-result (inserter content details args)
-  "Normalize hashline replace DETAILS and delegate to INSERTER."
+  "Normalize hashline edit DETAILS and delegate to INSERTER."
   (let ((details (copy-sequence details)))
     (when-let ((diff (plist-get details :diff)))
       (setq details (plist-put details :diff
@@ -148,28 +154,41 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
   (pimacs-hashline--wrap-result-inserter
+   "grep" #'pimacs-hashline--insert-grep-result)
+  (pimacs-hashline--wrap-result-inserter
    "write" #'pimacs-hashline--insert-write-result)
+  (pimacs-hashline--wrap-result-inserter
+   "insert" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
    "replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
-   "undo_last_replace" #'pimacs-hashline--insert-replace-result "edit")
+   "undo_last_change" #'pimacs-hashline--insert-replace-result "edit")
+  (pimacs-hashline--alias-tool-function
+   "insert" "edit"
+   'pimacs-insert-tool-args-functions "argument inserter")
   (pimacs-hashline--alias-tool-function
    "replace" "edit"
    'pimacs-insert-tool-args-functions "argument inserter")
   (pimacs-hashline--alias-tool-function
-   "undo_last_replace" "edit"
+   "undo_last_change" "edit"
    'pimacs-insert-tool-args-functions "argument inserter")
+  (pimacs-hashline--alias-tool-function
+   "insert" "edit"
+   'pimacs-visit-tool-result-functions "result visitor")
   (pimacs-hashline--alias-tool-function
    "replace" "edit"
    'pimacs-visit-tool-result-functions "result visitor")
   (pimacs-hashline--alias-tool-function
-   "undo_last_replace" "edit"
+   "undo_last_change" "edit"
    'pimacs-visit-tool-result-functions "result visitor")
+  (pimacs-hashline--alias-tool-function
+   "insert" "edit"
+   'pimacs-visit-tool-call-functions "call visitor")
   (pimacs-hashline--alias-tool-function
    "replace" "edit"
    'pimacs-visit-tool-call-functions "call visitor")
   (pimacs-hashline--alias-tool-function
-   "undo_last_replace" "edit"
+   "undo_last_change" "edit"
    'pimacs-visit-tool-call-functions "call visitor"))
 
 (provide 'pimacs-hashline)

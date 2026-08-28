@@ -11,7 +11,7 @@ Pimacs integrations for Pi extensions.
 Install the Pi extension:
 
 ```sh
-pi install git:github.com/YuGiMob/pi-hashline-edit-pro
+pi install npm:pi-hashline-edit-pro
 ```
 
 Install and enable its Pimacs integration from this repository:

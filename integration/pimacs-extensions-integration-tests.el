@@ -163,7 +163,7 @@
                           (pimacs-extensions--fixture-mode))
                   (concat "FIXTURE_SCENARIO=" ,scenario)))
            (pimacs-flags
-            (list "--tools" "read,replace,write,undo_last_replace"
+            (list "--tools" "read,replace,insert,grep,write,undo_last_change"
                   "--extension" fixture
                   "--extension" hashline)))
       (when (file-exists-p sessions-directory)
@@ -190,11 +190,23 @@
    (pimacs-extensions--send-prompt-and-wait
     "Read sample.txt, replace beta with BETA using replace, then finish.")))
 
-(ert-deftest pimacs-extensions-hashline-undo-last-replace ()
+(ert-deftest pimacs-extensions-hashline-insert ()
+  (pimacs-extensions--with-integration-project
+   "hashline-insert"
+   (pimacs-extensions--send-prompt-and-wait
+    "Read sample.txt, insert a new line `delta` after the line `beta` using insert tool.")))
+
+(ert-deftest pimacs-extensions-hashline-grep ()
+  (pimacs-extensions--with-integration-project
+   "hashline-grep"
+   (pimacs-extensions--send-prompt-and-wait
+    "Use grep tool and search for `beta` in *.txt")))
+
+(ert-deftest pimacs-extensions-hashline-undo-last-change ()
   (pimacs-extensions--with-integration-project
    "hashline-undo"
    (pimacs-extensions--send-prompt-and-wait
-    "Read sample.txt, replace beta with BETA using replace, then undo it with undo_last_replace, then finish.")))
+    "Read sample.txt, replace beta with BETA using replace, then undo it with undo_last_change, then finish.")))
 
 (ert-deftest pimacs-extensions-hashline-write ()
   (pimacs-extensions--with-integration-project
