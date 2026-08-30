@@ -4,14 +4,14 @@ assistant> The user wants me to read sample.txt, find the line containing "beta"
 
 First, I need to read sample.txt to get the anchor for the line containing "beta".
 
-read PROJECT_DIR/sample.txt
+read sample.txt
 alpha
 beta
 gamma
 
 assistant> The line "beta" has the anchor poj. I will now insert "delta" after it using the insert tool.
 
-insert PROJECT_DIR/sample.txt
+insert sample.txt
 Validation failed for tool "insert":
   - lines: must have required properties lines
   - root: must not have additional properties
@@ -40,9 +40,7 @@ It seems it interpreted "1": "delta" instead of lines: ["delta"].
 
 Let me re-do the insert with a proper list for lines.
 
-insert PROJECT_DIR/sample.txt
---- sample.txt
-+++ sample.txt
+insert sample.txt
 @@ -1,3 +1,4 @@
  alpha
  beta

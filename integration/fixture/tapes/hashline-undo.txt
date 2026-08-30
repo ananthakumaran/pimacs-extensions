@@ -8,7 +8,7 @@ assistant> The user wants me to perform a sequence of actions:
 
 First, I need to check if sample.txt exists and what its content is.
 
-read PROJECT_DIR/sample.txt
+read sample.txt
 alpha
 beta
 gamma
@@ -23,9 +23,7 @@ Plan:
 1. Use replace to change poj│beta to poj│BETA.
 2. Use undo_last_change on sample.txt.
 
-replace PROJECT_DIR/sample.txt
---- sample.txt
-+++ sample.txt
+replace sample.txt
 @@ -1,3 +1,3 @@
  alpha
 -beta
@@ -35,9 +33,7 @@ replace PROJECT_DIR/sample.txt
 
 assistant> The replace was successful (though the anchor changed from poj to YSH). Now I need to undo it.
 
-undo_last_change PROJECT_DIR/sample.txt
---- sample.txt
-+++ sample.txt
+undo_last_change sample.txt
 @@ -1,3 +1,3 @@
  alpha
 -BETA
