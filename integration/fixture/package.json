@@ -13,7 +13,7 @@
     ]
   },
   "dependencies": {
-    "pi-hashline-edit-pro": "^2.8.0",
+    "pi-hashline-edit-pro": "^2.8.3",
     "proxay": "^1.9.0"
   },
   "devDependencies": {

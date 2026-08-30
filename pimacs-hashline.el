@@ -89,12 +89,72 @@
   (funcall inserter
            (pimacs-hashline--strip-content-prefixes content)
            details args))
+(defconst pimacs-hashline--grep-anchor-regexp
+  "\\(^[ \\t]*[0-9]+[ \\t]*│[ \\t]*\\)[A-Za-z0-9]\\{3\\}│"
+  "Regexp matching the anchor in a numbered hashline grep row.")
 
-(defun pimacs-hashline--insert-grep-result (inserter content details args)
-  "Normalize hashline grep CONTENT and delegate to INSERTER."
-  (funcall inserter
-           (pimacs-hashline--strip-content-prefixes content)
-           details args))
+(defconst pimacs-hashline--grep-row-regexp
+  "^[ \\t]*\\([0-9]+\\)[ \\t]*\\(│\\)[ \\t]*\\(.*\\)$"
+  "Regexp matching a displayed hashline grep row after anchor removal.")
+
+(defconst pimacs-hashline--grep-header-regexp
+  "^=== \\(.*\\) ===$"
+  "Regexp matching a hashline grep file header.")
+
+(defun pimacs-hashline--fontify-grep-rows (begin end regexp ignore-case)
+  "Fontify hashline grep rows between BEGIN and END."
+  (save-excursion
+    (save-restriction
+      (narrow-to-region begin end)
+      (goto-char (point-min))
+      (while (not (eobp))
+        (cond
+         ((looking-at pimacs-hashline--grep-header-regexp)
+          (add-text-properties (match-beginning 1) (match-end 1)
+                               '(face compilation-info)))
+         ((looking-at pimacs-hashline--grep-row-regexp)
+          (add-text-properties (match-beginning 1) (match-end 1)
+                               '(face compilation-line-number))
+          (add-text-properties (match-beginning 2) (match-end 2)
+                               '(face shadow))
+          (pimacs--fontify-grep-matches
+           (match-beginning 3) (match-end 3) regexp ignore-case)))
+        (forward-line 1)))))
+
+
+(defun pimacs-hashline--visit-grep-result (_details args)
+  "Return the file position represented by the hashline grep row at point."
+  (let ((cursor-position (point))
+        (section (pimacs-section--current-section)))
+    (save-excursion
+      (beginning-of-line)
+      (when (looking-at pimacs-hashline--grep-row-regexp)
+        (let ((line (string-to-number (match-string 1)))
+              (content-begin (match-beginning 3))
+              (content-end (match-end 3)))
+          (when (re-search-backward
+                 pimacs-hashline--grep-header-regexp
+                 (if section (pimacs-section-beginning section) (point-min))
+                 t)
+            (list :file (pimacs--normalize-grep-file (match-string 1) args)
+                  :line line
+                  :column (max 0 (min (- cursor-position content-begin)
+                                      (- content-end content-begin))))))))))
+(defun pimacs-hashline--insert-grep-result (content _details args)
+  "Insert hashline grep CONTENT and fontify matches in grep rows only."
+  (let* ((pattern (plist-get args :pattern))
+         (literal (eq (plist-get args :literal) t))
+         (ignore-case (eq (plist-get args :ignoreCase) t))
+         (fontify (and pattern (not (string-empty-p pattern))))
+         (regexp (and fontify (pimacs--grep-pattern-regexp pattern literal)))
+         (result-text
+          (replace-regexp-in-string
+           pimacs-hashline--grep-anchor-regexp "\\1"
+           (pimacs--content-text content)))
+         (begin (point)))
+    (insert result-text)
+    (when fontify
+      (pimacs-hashline--fontify-grep-rows begin (point) regexp ignore-case))))
 
 (defun pimacs-hashline--insert-write-result (inserter content details args)
   "Hide auto-read output from WRITE results displayed in Pimacs."
@@ -153,8 +213,14 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   "Install the pi-hashline-edit-pro result inserters."
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
-  (pimacs-hashline--wrap-result-inserter
-   "grep" #'pimacs-hashline--insert-grep-result)
+  (pimacs-hashline--set-tool-function
+   "anchor_grep"
+   'pimacs-insert-tool-result-functions
+   #'pimacs-hashline--insert-grep-result)
+  (pimacs-hashline--set-tool-function
+   "anchor_grep"
+   'pimacs-visit-tool-result-functions
+   #'pimacs-hashline--visit-grep-result)
   (pimacs-hashline--wrap-result-inserter
    "write" #'pimacs-hashline--insert-write-result)
   (pimacs-hashline--wrap-result-inserter
@@ -163,6 +229,9 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
    "replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
    "undo_last_change" #'pimacs-hashline--insert-replace-result "edit")
+  (pimacs-hashline--alias-tool-function
+   "anchor_grep" "grep"
+   'pimacs-insert-tool-args-functions "argument inserter")
   (pimacs-hashline--alias-tool-function
    "insert" "edit"
    'pimacs-insert-tool-args-functions "argument inserter")

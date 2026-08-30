@@ -59,6 +59,37 @@
      (equal inserted
             '((:type "text" :text "(defun pimacs--start-agent (key)"))))))
 
+(ert-deftest pimacs-extensions-hashline-fontifies-grep-content-only ()
+  (with-temp-buffer
+    (insert "nearby beta\n")
+    (pimacs-hashline--insert-grep-result
+     '((:type "text" :text "=== beta.txt ===\n1 │ aB3│beta\n2 │ Zy9│context"))
+     nil '(:pattern "beta"))
+    (insert "\nnearby beta")
+    (should (equal (buffer-string)
+                   "nearby beta\n=== beta.txt ===\n1 │ beta\n2 │ context\nnearby beta"))
+    (goto-char (point-min))
+    (search-forward "nearby beta")
+    (should-not (get-text-property (1- (point)) 'face))
+    (search-forward "beta.txt")
+    (should (eq (get-text-property (1- (point)) 'face)
+                'compilation-info))
+    (search-forward "\n1 │")
+    (should (eq (get-text-property (1- (point)) 'face) 'shadow))
+    (search-forward "beta")
+    (should (eq (get-text-property (1- (point)) 'face)
+                'pimacs-grep-match-face))
+    (search-forward "\nnearby beta")
+    (should-not (get-text-property (1- (point)) 'face))))
+
+(ert-deftest pimacs-extensions-hashline-visits-grep-results ()
+  (with-temp-buffer
+    (insert "=== src/example.el ===\n12 │ body")
+    (search-backward "body")
+    (forward-char 2)
+    (should (equal (pimacs-hashline--visit-grep-result nil nil)
+                   '(:file "src/example.el" :line 12 :column 2)))))
+
 (ert-deftest pimacs-extensions-hashline-hides-write-auto-read ()
   (let (inserted)
     (pimacs-hashline--insert-write-result
@@ -163,7 +194,7 @@
                           (pimacs-extensions--fixture-mode))
                   (concat "FIXTURE_SCENARIO=" ,scenario)))
            (pimacs-flags
-            (list "--tools" "read,replace,insert,grep,write,undo_last_change"
+            (list "--tools" "read,replace,insert,anchor_grep,write,undo_last_change"
                   "--extension" fixture
                   "--extension" hashline)))
       (when (file-exists-p sessions-directory)
