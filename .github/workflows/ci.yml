@@ -53,5 +53,8 @@ jobs:
           npm ci --prefix integration/fixture
           echo "$PWD/integration/fixture/node_modules/.bin" >> "$GITHUB_PATH"
 
+      - name: Install ripgrep
+        run: sudo apt-get update && sudo apt-get install --yes ripgrep
+
       - name: Verify
         run: make verify
