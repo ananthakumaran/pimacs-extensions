@@ -4,3 +4,5 @@
 node_modules
 .npm-cache
 integration/project/agent/sessions/
+integration/project/agent/.config/pi-hashline-edit-pro/*
+!integration/project/agent/.config/pi-hashline-edit-pro/config.json

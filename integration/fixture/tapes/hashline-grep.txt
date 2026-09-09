@@ -1,17 +1,21 @@
 user> Use grep tool and search for `beta` in *.txt
 
-assistant> The user wants to search for "beta" in all .txt files using the anchor_grep tool.
+assistant> The user wants to search for the string "beta" in all .txt files using the anchor_grep tool.
+
+I should use anchor_grep with:
+▪ pattern: "beta"
+▪ glob: "*.txt"
 
 anchor_grep /beta/ (*.txt)
 === sample.txt ===
 2 │ beta
 
-assistant> The search for "beta" in .txt files returned one hit: poj│beta in sample.txt.
+assistant> The grep search for "beta" in *.txt files found one match in sample.txt at line 2.
 
-assistant> I found one occurrence of beta in sample.txt:
+assistant> I found one occurrence of "beta" in sample.txt:
 
 === sample.txt ===
-2 │ poj│beta
+2 │ JsEd│beta
 
 
 

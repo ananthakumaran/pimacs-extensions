@@ -53,7 +53,7 @@
   (let (inserted)
     (pimacs-hashline--insert-read-result
      (lambda (content _details _args) (setq inserted content))
-     '((:type "text" :text "aB3│(defun pimacs--start-agent (key)"))
+     '((:type "text" :text "aB3d│(defun pimacs--start-agent (key)"))
      nil nil)
     (should
      (equal inserted
@@ -63,7 +63,7 @@
   (with-temp-buffer
     (insert "nearby beta\n")
     (pimacs-hashline--insert-grep-result
-     '((:type "text" :text "=== beta.txt ===\n1 │ aB3│beta\n2 │ Zy9│context"))
+     '((:type "text" :text "=== beta.txt ===\n1 │ aB3d│beta\n2 │ Zy9q│context"))
      nil '(:pattern "beta"))
     (insert "\nnearby beta")
     (should (equal (buffer-string)
@@ -95,7 +95,7 @@
     (pimacs-hashline--insert-write-result
      (lambda (content _details _args) (setq inserted content))
      '((:type "text" :text "Successfully wrote 139 bytes")
-       (:type "text" :text "\n\n--- Auto-read (hashline anchors) ---\n6D3│# Test File 1\nAuN│\nAGe│This is a second test markdown file.\nBHf│\nVon│## Sample Content\nWpo│\niZ9│- Item 1\nXjt│- Item 2\nqsJ│- Item 3\nrtK│\no9h│Additional content can be added below."))
+       (:type "text" :text "\n\n--- Auto-read (hashline anchors) ---\n6D3a│# Test File 1\nAuNb│\nAGec│This is a second test markdown file.\nBHfd│\nVone│## Sample Content\nWpof│\niZ9g│- Item 1\nXjth│- Item 2\nqsJi│- Item 3\nrtKj│\no9hk│Additional content can be added below."))
      nil nil)
     (should
      (equal inserted
@@ -192,6 +192,7 @@
             (list (concat "PI_CODING_AGENT_DIR=" agent-directory)
                   (concat "FIXTURE_MODE="
                           (pimacs-extensions--fixture-mode))
+                  (concat "XDG_CONFIG_HOME=" (expand-file-name ".config" agent-directory))
                   (concat "FIXTURE_SCENARIO=" ,scenario)))
            (pimacs-flags
             (list "--tools" "read,replace,insert,anchor_grep,write,undo_last_change"

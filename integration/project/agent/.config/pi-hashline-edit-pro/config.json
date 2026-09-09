@@ -1,0 +1,7 @@
+{
+  "autoRead": true,
+  "anchorGrepEnabled": true,
+  "requirePath": true,
+  "strictInput": false,
+  "boundaryDedupEnabled": true
+}

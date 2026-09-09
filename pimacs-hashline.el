@@ -35,15 +35,15 @@
 (require 'pimacs-extensions)
 
 (defconst pimacs-hashline--prefix-regexp
-  "^[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
+  "^[ \t]*[A-Za-z0-9]\\{4\\}│"
   "Regexp matching a pi-hashline-edit-pro line prefix.")
 
 (defconst pimacs-hashline--diff-prefix-regexp
-  "^\\([ +]\\)[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
+  "^\\([ +]\\)[ \t]*[A-Za-z0-9]\\{4\\}│"
   "Regexp matching a context or addition prefix in a hashline diff.")
 
 (defconst pimacs-hashline--diff-deletion-prefix-regexp
-  "^-[ \t]*[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]│"
+  "^-[ \t]*[A-Za-z0-9]\\{4\\}│"
   "Regexp matching a deletion prefix in a hashline diff.")
 
 (defconst pimacs-hashline--auto-read-marker
@@ -90,7 +90,7 @@
            (pimacs-hashline--strip-content-prefixes content)
            details args))
 (defconst pimacs-hashline--grep-anchor-regexp
-  "\\(^[ \\t]*[0-9]+[ \\t]*│[ \\t]*\\)[A-Za-z0-9]\\{3\\}│"
+  "\\(^[ \t]*[0-9]+[ \t]*│[ \t]*\\)[A-Za-z0-9]\\{4\\}│"
   "Regexp matching the anchor in a numbered hashline grep row.")
 
 (defconst pimacs-hashline--grep-row-regexp
