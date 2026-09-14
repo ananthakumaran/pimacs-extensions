@@ -1,38 +1,16 @@
 user> Read sample.txt, insert a new line `delta` after the line `beta` using insert tool.
 
-assistant> The user wants me to read sample.txt, find the line containing "beta", and insert "delta" after it using the insert tool.
+assistant> The user wants to read sample.txt, find the line containing beta, and insert "delta" after it using the insert tool.
 
-First, I need to read sample.txt to get the anchor for the line containing "beta".
+First, I need to read sample.txt to get the anchor for beta.
 
 read sample.txt
 alpha
 beta
 gamma
 
-assistant> The content of sample.txt is:
-ekJR│alpha
-MiCX│beta
-roWT│gamma
-The anchor for the line containing "beta" is MiCX.
-I need to insert "delta" after this line using the insert tool.
-
-insert sample.txt
-Validation failed for tool "insert":
-  - lines: must have required properties lines
-
-Received arguments:
-{
-  "1": "delta",
-  "anchor": "MiCX",
-  "direction": "after",
-  "path": "sample.txt"
-}
-
-assistant> Ah, I see why it failed. The lines parameter is supposed to be an array of strings, not a string with index. My mistake. Let me correct the call and insert "delta" as an array element.Wait, looking at the tool definition:
-insert: Insert lines after or before an anchor line: the anchor line stays, lines are bare without │, one per element; include path (required).
-
-The user wants to insert "delta".
-In my last call, I provided "1": "delta" which was probably interpreted as a key-value pair in some contexts or just an incorrectly formatted object if it weren't JSON. I should have used ["delta"].
+assistant> I have successfully read sample.txt. The anchor for "beta" is PVmn.
+Now I can use the insert tool to insert "delta" after this line.
 
 insert sample.txt
 @@ -1,3 +1,4 @@
@@ -42,9 +20,9 @@ insert sample.txt
  gamma
 
 
-assistant> The edit was successful.
+assistant> The line "delta" has been inserted after "beta".
 
-assistant> I have successfully read sample.txt and inserted "delta" after the line "beta".
+assistant> I have successfully inserted the line delta after beta in sample.txt.
 
 
  user> 
