@@ -84,6 +84,11 @@
     (replace-regexp-in-string
      pimacs-hashline--diff-deletion-prefix-regexp "-" diff)))
 
+(defun pimacs-hashline--copy-replace-result (details _args)
+  (when-let ((diff (or (plist-get details :patch)
+                       (plist-get details :diff))))
+    (pimacs-hashline--normalize-diff diff)))
+
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
   (funcall inserter
@@ -229,6 +234,18 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
    "replace" #'pimacs-hashline--insert-replace-result "edit")
   (pimacs-hashline--wrap-result-inserter
    "undo_last_change" #'pimacs-hashline--insert-replace-result "edit")
+  (pimacs-hashline--set-tool-function
+   "insert"
+   'pimacs-copy-tool-result-functions
+   #'pimacs-hashline--copy-replace-result)
+  (pimacs-hashline--set-tool-function
+   "replace"
+   'pimacs-copy-tool-result-functions
+   #'pimacs-hashline--copy-replace-result)
+  (pimacs-hashline--set-tool-function
+   "undo_last_change"
+   'pimacs-copy-tool-result-functions
+   #'pimacs-hashline--copy-replace-result)
   (pimacs-hashline--alias-tool-function
    "anchor_grep" "grep"
    'pimacs-insert-tool-args-functions "argument inserter")
