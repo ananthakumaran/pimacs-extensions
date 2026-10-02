@@ -1,0 +1,2229 @@
+http_interactions:
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:59877
+        connection: keep-alive
+        accept: application/json
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 7.19.0
+        x-stainless-os: MacOS
+        x-stainless-arch: arm64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.3
+        authorization: Bearer fixture
+        user-agent: pi (darwin 25.6.0; arm64)
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '18488'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\n<tools>\n- read: Read a file; each
+          line returned as anchor│content\n- replace: Replace lines by anchor:
+          bare anchors in `remove_from`/`remove_to`, the exact replacement text
+          in `replacement_lines` (one edit per call); include `path`
+          (required)\n- replace_within: Replace part of a line or range by
+          anchor: `replace_old` is matched exactly once inside
+          `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
+          rest of the text untouched; include `path` (required)\n- insert:
+          Insert a text block after or before an anchor line: the anchor line
+          stays; `lines` is the exact text without anchor prefixes; include
+          `path` (required)\n- copy: Copy lines to another position by anchor:
+          `source_from`/`source_to` mark the range, the copy lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- move: Move lines to another position by anchor:
+          `source_from`/`source_to` mark the range, it lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          hits usable directly for `replace`/`insert`; use
+          `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
+          undo_last_change: Single-level undo: reverts a file's last `replace`,
+          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          tools above, you may have access to other custom tools depending on
+          the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
+          when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
+          rows and any served `anchor│content` rows already carry fresh anchors
+          for the changed range.\n- `read`: `[W_ANCHOR_RECLAIMED]` means the
+          session's anchor quota was tight and the listed files' anchors were
+          freed; read a freed file again before editing it.\n- `replace`:
+          same-file same-message calls batch: disjoint ranges, one undo. A call
+          whose anchors resolve nowhere fails alone.\n- `replace`:
+          `replacement_lines` is one string; a pasted `anchor│` prefix is
+          stripped; single line: same anchor for `remove_from` and
+          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          change part of a line, so every character the request does not name is
+          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          exactly from the served row and occur once in the range; a missing or
+          repeated match is refused and returns the current rows.\n-
+          `replace_within`: a batch never groups it; it commits on its own, like
+          `copy` and `move`.\n- `insert`: after inserting a quoted payload,
+          check the post-edit diff for an extra `+anchor│` blank row before the
+          next line.\n- `copy`: the same anchor in `source_from` and `source_to`
+          copies one line; copied lines get fresh anchors in the post-edit diff
+          and the source rows keep theirs.\n- `move`: a cross-file move records
+          one undo entry per file — undo both sides. Lines between source and
+          target may be re-anchored.\n- Use write only for new files or complete
+          rewrites.\n- `undo_last_change`: only the last
+          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          undoable; a `write` clears it, so undo right after a bad diff — review
+          the diff's `-anchor│` rows first to confirm what you're restoring.\n-
+          `undo_last_change`: a cross-file `move` records one undo entry per
+          file; undo both the source and the destination to revert the whole
+          move, because undoing one side alone leaves the moved lines duplicated
+          or missing.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n</rules>\n\n<docs>\nPi documentation (read
+          only when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md), MCP servers (docs/mcp.md), codemode
+          scripts and non-LLM models such as classifiers and image models
+          (docs/codemode.md)\n- When working on pi topics, read the docs and
+          examples, and follow .md cross-references before implementing\n-
+          Always read pi .md files completely and follow links to related docs
+          (e.g., tui.md for TUI API
+          details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
+          sample.txt. Use replace_within to change beta to BETA. Without reading
+          again, use the fresh anchor from the edit diff with replace_within to
+          change BETA to BETTER.
+          Finish."}]}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file and return it as `anchor│content` rows, one per line: a
+          4-character anchor (letters only, case-sensitive), the `│` separator,
+          then the line content. Target lines in replace and insert by anchor,
+          never by content or line number. Page long files with `offset` and
+          `limit`; when the output says truncated, continue with the hinted
+          `offset/limit`. Images attach visually; binary, directory, and
+          UTF-16/UTF-32 text are rejected; an empty file returns one empty row
+          you can replace to seed
+          content.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}}}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines (or a single line) in a text file by anchor.
+          `remove_from` and `remove_to` are the 4-character anchors of the first
+          and last line to remove, and `replacement_lines` is one string with
+          the exact replacement text: `\"\"` deletes the range, and escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. The text is written exactly as given, and nothing else in the
+          file changes.\nTo change only part of a line without retyping the
+          rest, use `replace_within` instead; it preserves every character the
+          request does not name.\n\nSame-file calls in one message batch:
+          earlier calls reply `In batch N` and the last call shows the combined
+          diff, with one undo for the whole batch.\n\nExample: read served
+          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
+          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
+          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          rows are live anchors for the next edit. Also give `path` matching the
+          file the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"remove_from":{"type":"string","description":"4-char
+          anchor of the FIRST line to remove (never the row
+          content)."},"remove_to":{"type":"string","description":"4-char anchor
+          of the LAST line to
+          remove."},"replacement_lines":{"type":"string","description":"The
+          exact text to write in place of the removed range. \"\" deletes the
+          range, \"\\n\" is one blank line, and a trailing line break sets the
+          last line's ending instead of adding a blank
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          part of a line (or a range of lines) without retyping the rest.
+          `replace_from` and `replace_to` are bare anchors from served
+          `anchor│content` rows marking the first and last line of the range;
+          use the same anchor for one line. `replace_old` is the exact text to
+          find inside that range, copied from the served row; it must occur
+          exactly once. `replace_new` replaces just that match, and every other
+          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
+          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          \"replace_old\": \"legacyCheckout\", \"replace_new\":
+          \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
+          \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
+          diff carries fresh anchors.\n\nBoth strings are exact text; escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. Matching uses LF line breaks and excludes the last line's
+          terminator. A missing match is refused with the current rows, a
+          repeated match with the matching line numbers, so the retry needs no
+          read. Nothing but the matched text changes. Also give `path` matching
+          the file the anchors were served for; it is required and must match
+          anchor
+          ownership.","parameters":{"type":"object","required":["path","replace_from","replace_to","replace_old","replace_new"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"replace_from":{"type":"string","description":"4-char
+          anchor of the FIRST line of the range searched (never the row
+          content)."},"replace_to":{"type":"string","description":"4-char anchor
+          of the LAST line of the range searched; same as replace_from for a
+          single line."},"replace_old":{"type":"string","description":"The exact
+          text to find inside the selected line(s), copied from the served row.
+          It must occur exactly once; the text around it is left untouched.
+          Matching uses LF line breaks and excludes the last line's
+          terminator."},"replace_new":{"type":"string","description":"The exact
+          replacement for the matched text. \"\" deletes the match, \"\\n\"
+          inserts one blank line, and a trailing line break sets the last line's
+          ending instead of adding a blank line; the rest of the range is kept
+          byte-for-byte."}},"additionalProperties":true}}},{"type":"function","function":{"name":"insert","description":"Insert
+          text after or before one existing line in a text file, addressed by a
+          bare anchor from any served anchor│content row. The anchor line is
+          preserved: `lines` go after it with `direction: \"after\"` or before
+          it with `direction: \"before\"`. `lines` is one string holding the
+          exact text to insert; escapes decode once — `\\uXXXX` is the
+          character, `\\\\uXXXX` the literal text.\n\nSame-file calls in one
+          message batch: earlier calls reply `In batch N` and the last call
+          shows the combined diff, with one undo for the whole batch. Also give
+          `path` matching the file the anchor was served for; it is required and
+          must match anchor
+          ownership.","parameters":{"type":"object","required":["path","anchor","direction","lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchor was served for; required and must match anchor
+          ownership."},"anchor":{"type":"string","description":"4-char anchor of
+          the line to insert next to (never the row content). A pasted diff row
+          is stripped with a warning; the anchor line is
+          preserved."},"direction":{"anyOf":[{"type":"string","const":"after"},{"type":"string","const":"before"}],"description":"\"after\"
+          or \"before\""},"lines":{"type":"string","description":"The exact text
+          to insert. \"\" inserts nothing, \"\\n\" is one blank line, and a
+          trailing line break sets the last line's ending instead of adding a
+          blank line. Never include the anchor
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"copy","description":"Copy
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to copy in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the copy goes. `source_from` and `source_to` may belong to
+          a different file than `insert_after`: the lines are copied from the
+          source file and inserted into the destination file, and an empty
+          destination file is seeded with the copied lines. The source lines
+          stay in place, and the copied lines are written exactly as the source
+          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
+          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
+          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          `path` matching the source or destination file the anchors were served
+          for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"move","description":"Move
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to move in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the range goes. `source_from` and `source_to` may belong
+          to a different file than `insert_after`: the range is removed from the
+          source file and inserted into the destination file in one call, and an
+          empty destination file is seeded with the moved lines. `insert_after`
+          must sit outside the source range when both anchors share a file;
+          moving a range in one file to where it already sits reports no
+          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
+          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
+          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          below `top`. Also give `path` matching the source or destination file
+          the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          text files with ripgrep. Hits and context lines come back as
+          `lineNumber │ anchor│content` rows, editable with replace, insert,
+          copy, or move without a new read; the `=== path ===` header and line
+          numbers locate the match. Searches respect `.gitignore`, always skip
+          `.git`, and skip binary and image files silently. A match over 500
+          bytes is shown as a `...` fragment around the hit, but its anchor
+          still covers the whole line. When cut by match limit, raise `limit`
+          (default 100); when cut by rows/bytes, refine `pattern` / narrow
+          path.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex or literal
+          string)"},"path":{"type":"string","description":"Directory or file to
+          search (default: current
+          directory)"},"glob":{"type":"string","description":"Filter files by
+          glob; `*` crosses directories, e.g. `*.ts`. A leading `/` is ignored;
+          relative to the search root or
+          cwd."},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          search"},"literal":{"type":"boolean","description":"Treat pattern as
+          literal text instead of
+          regex"},"context":{"type":"integer","minimum":0,"description":"Lines
+          of context before and after each
+          match"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of matched lines to
+          return"}},"additionalProperties":true}}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
+          the last replace, replace_within, insert, copy, or move on a file,
+          restoring the previous content, BOM, and line endings. Use it when an
+          edit removed or changed the wrong lines. If the file changed since
+          that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
+          modified: the record is kept, so verify the current state with read
+          and stop instead of forcing the undo. A file deleted since the edit is
+          restored. If the output says truncated, use read to see the full
+          file.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}}}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Fri, 02 Oct 2026 11:01:24 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          user"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          wants"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          me"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":":"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n1"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Read"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n2"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"replace"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"_"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"within"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          change"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938884,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n3"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          Then"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          fresh"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          anchor"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          from"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          that"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          edit"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          ("},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"without"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          reading"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          again"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":")"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          change"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938885,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"BET"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"TER"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          using"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"replace"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"_"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"within"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\n\nI"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          will"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          start"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          by"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          reading"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"sample"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"txt"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938886,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938887,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_dicqrelg","index":0,"type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938887,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+
+          data:
+          {"id":"chatcmpl-613","object":"chat.completion.chunk","created":1790938887,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":4497,"completion_tokens":97,"total_tokens":4594}}
+
+
+          data: [DONE]
+
+        compression: none
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:59877
+        connection: keep-alive
+        accept: application/json
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 7.19.0
+        x-stainless-os: MacOS
+        x-stainless-arch: arm64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.3
+        authorization: Bearer fixture
+        user-agent: pi (darwin 25.6.0; arm64)
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '19029'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\n<tools>\n- read: Read a file; each
+          line returned as anchor│content\n- replace: Replace lines by anchor:
+          bare anchors in `remove_from`/`remove_to`, the exact replacement text
+          in `replacement_lines` (one edit per call); include `path`
+          (required)\n- replace_within: Replace part of a line or range by
+          anchor: `replace_old` is matched exactly once inside
+          `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
+          rest of the text untouched; include `path` (required)\n- insert:
+          Insert a text block after or before an anchor line: the anchor line
+          stays; `lines` is the exact text without anchor prefixes; include
+          `path` (required)\n- copy: Copy lines to another position by anchor:
+          `source_from`/`source_to` mark the range, the copy lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- move: Move lines to another position by anchor:
+          `source_from`/`source_to` mark the range, it lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          hits usable directly for `replace`/`insert`; use
+          `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
+          undo_last_change: Single-level undo: reverts a file's last `replace`,
+          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          tools above, you may have access to other custom tools depending on
+          the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
+          when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
+          rows and any served `anchor│content` rows already carry fresh anchors
+          for the changed range.\n- `read`: `[W_ANCHOR_RECLAIMED]` means the
+          session's anchor quota was tight and the listed files' anchors were
+          freed; read a freed file again before editing it.\n- `replace`:
+          same-file same-message calls batch: disjoint ranges, one undo. A call
+          whose anchors resolve nowhere fails alone.\n- `replace`:
+          `replacement_lines` is one string; a pasted `anchor│` prefix is
+          stripped; single line: same anchor for `remove_from` and
+          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          change part of a line, so every character the request does not name is
+          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          exactly from the served row and occur once in the range; a missing or
+          repeated match is refused and returns the current rows.\n-
+          `replace_within`: a batch never groups it; it commits on its own, like
+          `copy` and `move`.\n- `insert`: after inserting a quoted payload,
+          check the post-edit diff for an extra `+anchor│` blank row before the
+          next line.\n- `copy`: the same anchor in `source_from` and `source_to`
+          copies one line; copied lines get fresh anchors in the post-edit diff
+          and the source rows keep theirs.\n- `move`: a cross-file move records
+          one undo entry per file — undo both sides. Lines between source and
+          target may be re-anchored.\n- Use write only for new files or complete
+          rewrites.\n- `undo_last_change`: only the last
+          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          undoable; a `write` clears it, so undo right after a bad diff — review
+          the diff's `-anchor│` rows first to confirm what you're restoring.\n-
+          `undo_last_change`: a cross-file `move` records one undo entry per
+          file; undo both the source and the destination to revert the whole
+          move, because undoing one side alone leaves the moved lines duplicated
+          or missing.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n</rules>\n\n<docs>\nPi documentation (read
+          only when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md), MCP servers (docs/mcp.md), codemode
+          scripts and non-LLM models such as classifiers and image models
+          (docs/codemode.md)\n- When working on pi topics, read the docs and
+          examples, and follow .md cross-references before implementing\n-
+          Always read pi .md files completely and follow links to related docs
+          (e.g., tui.md for TUI API
+          details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
+          sample.txt. Use replace_within to change beta to BETA. Without reading
+          again, use the fresh anchor from the edit diff with replace_within to
+          change BETA to BETTER.
+          Finish."}]},{"role":"assistant","content":null,"reasoning":"The user
+          wants me to:\n1. Read `sample.txt`.\n2. Use `replace_within` to change
+          \"beta\" to \"BETA\".\n3. Then use the fresh anchor from that edit
+          (without reading again) to change \"BETA\" to \"BETTER\" using
+          `replace_within`.\n\nI will start by reading
+          `sample.txt`.","tool_calls":[{"id":"call_dicqrelg","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_dicqrelg"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file and return it as `anchor│content` rows, one per line: a
+          4-character anchor (letters only, case-sensitive), the `│` separator,
+          then the line content. Target lines in replace and insert by anchor,
+          never by content or line number. Page long files with `offset` and
+          `limit`; when the output says truncated, continue with the hinted
+          `offset/limit`. Images attach visually; binary, directory, and
+          UTF-16/UTF-32 text are rejected; an empty file returns one empty row
+          you can replace to seed
+          content.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}}}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines (or a single line) in a text file by anchor.
+          `remove_from` and `remove_to` are the 4-character anchors of the first
+          and last line to remove, and `replacement_lines` is one string with
+          the exact replacement text: `\"\"` deletes the range, and escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. The text is written exactly as given, and nothing else in the
+          file changes.\nTo change only part of a line without retyping the
+          rest, use `replace_within` instead; it preserves every character the
+          request does not name.\n\nSame-file calls in one message batch:
+          earlier calls reply `In batch N` and the last call shows the combined
+          diff, with one undo for the whole batch.\n\nExample: read served
+          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
+          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
+          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          rows are live anchors for the next edit. Also give `path` matching the
+          file the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"remove_from":{"type":"string","description":"4-char
+          anchor of the FIRST line to remove (never the row
+          content)."},"remove_to":{"type":"string","description":"4-char anchor
+          of the LAST line to
+          remove."},"replacement_lines":{"type":"string","description":"The
+          exact text to write in place of the removed range. \"\" deletes the
+          range, \"\\n\" is one blank line, and a trailing line break sets the
+          last line's ending instead of adding a blank
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          part of a line (or a range of lines) without retyping the rest.
+          `replace_from` and `replace_to` are bare anchors from served
+          `anchor│content` rows marking the first and last line of the range;
+          use the same anchor for one line. `replace_old` is the exact text to
+          find inside that range, copied from the served row; it must occur
+          exactly once. `replace_new` replaces just that match, and every other
+          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
+          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          \"replace_old\": \"legacyCheckout\", \"replace_new\":
+          \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
+          \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
+          diff carries fresh anchors.\n\nBoth strings are exact text; escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. Matching uses LF line breaks and excludes the last line's
+          terminator. A missing match is refused with the current rows, a
+          repeated match with the matching line numbers, so the retry needs no
+          read. Nothing but the matched text changes. Also give `path` matching
+          the file the anchors were served for; it is required and must match
+          anchor
+          ownership.","parameters":{"type":"object","required":["path","replace_from","replace_to","replace_old","replace_new"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"replace_from":{"type":"string","description":"4-char
+          anchor of the FIRST line of the range searched (never the row
+          content)."},"replace_to":{"type":"string","description":"4-char anchor
+          of the LAST line of the range searched; same as replace_from for a
+          single line."},"replace_old":{"type":"string","description":"The exact
+          text to find inside the selected line(s), copied from the served row.
+          It must occur exactly once; the text around it is left untouched.
+          Matching uses LF line breaks and excludes the last line's
+          terminator."},"replace_new":{"type":"string","description":"The exact
+          replacement for the matched text. \"\" deletes the match, \"\\n\"
+          inserts one blank line, and a trailing line break sets the last line's
+          ending instead of adding a blank line; the rest of the range is kept
+          byte-for-byte."}},"additionalProperties":true}}},{"type":"function","function":{"name":"insert","description":"Insert
+          text after or before one existing line in a text file, addressed by a
+          bare anchor from any served anchor│content row. The anchor line is
+          preserved: `lines` go after it with `direction: \"after\"` or before
+          it with `direction: \"before\"`. `lines` is one string holding the
+          exact text to insert; escapes decode once — `\\uXXXX` is the
+          character, `\\\\uXXXX` the literal text.\n\nSame-file calls in one
+          message batch: earlier calls reply `In batch N` and the last call
+          shows the combined diff, with one undo for the whole batch. Also give
+          `path` matching the file the anchor was served for; it is required and
+          must match anchor
+          ownership.","parameters":{"type":"object","required":["path","anchor","direction","lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchor was served for; required and must match anchor
+          ownership."},"anchor":{"type":"string","description":"4-char anchor of
+          the line to insert next to (never the row content). A pasted diff row
+          is stripped with a warning; the anchor line is
+          preserved."},"direction":{"anyOf":[{"type":"string","const":"after"},{"type":"string","const":"before"}],"description":"\"after\"
+          or \"before\""},"lines":{"type":"string","description":"The exact text
+          to insert. \"\" inserts nothing, \"\\n\" is one blank line, and a
+          trailing line break sets the last line's ending instead of adding a
+          blank line. Never include the anchor
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"copy","description":"Copy
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to copy in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the copy goes. `source_from` and `source_to` may belong to
+          a different file than `insert_after`: the lines are copied from the
+          source file and inserted into the destination file, and an empty
+          destination file is seeded with the copied lines. The source lines
+          stay in place, and the copied lines are written exactly as the source
+          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
+          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
+          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          `path` matching the source or destination file the anchors were served
+          for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"move","description":"Move
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to move in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the range goes. `source_from` and `source_to` may belong
+          to a different file than `insert_after`: the range is removed from the
+          source file and inserted into the destination file in one call, and an
+          empty destination file is seeded with the moved lines. `insert_after`
+          must sit outside the source range when both anchors share a file;
+          moving a range in one file to where it already sits reports no
+          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
+          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
+          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          below `top`. Also give `path` matching the source or destination file
+          the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          text files with ripgrep. Hits and context lines come back as
+          `lineNumber │ anchor│content` rows, editable with replace, insert,
+          copy, or move without a new read; the `=== path ===` header and line
+          numbers locate the match. Searches respect `.gitignore`, always skip
+          `.git`, and skip binary and image files silently. A match over 500
+          bytes is shown as a `...` fragment around the hit, but its anchor
+          still covers the whole line. When cut by match limit, raise `limit`
+          (default 100); when cut by rows/bytes, refine `pattern` / narrow
+          path.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex or literal
+          string)"},"path":{"type":"string","description":"Directory or file to
+          search (default: current
+          directory)"},"glob":{"type":"string","description":"Filter files by
+          glob; `*` crosses directories, e.g. `*.ts`. A leading `/` is ignored;
+          relative to the search root or
+          cwd."},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          search"},"literal":{"type":"boolean","description":"Treat pattern as
+          literal text instead of
+          regex"},"context":{"type":"integer","minimum":0,"description":"Lines
+          of context before and after each
+          match"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of matched lines to
+          return"}},"additionalProperties":true}}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
+          the last replace, replace_within, insert, copy, or move on a file,
+          restoring the previous content, BOM, and line endings. Use it when an
+          edit removed or changed the wrong lines. If the file changed since
+          that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
+          modified: the record is kept, so verify the current state with read
+          and stop instead of forcing the undo. A file deleted since the edit is
+          restored. If the output says truncated, use read to see the full
+          file.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}}}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Fri, 02 Oct 2026 11:01:28 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          see"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          line"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          with"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          has"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          anchor"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"cp"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"Cy"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938888,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\nThe"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          instruction"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          is"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          change"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          using"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"replace"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"_"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"within"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938889,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938892,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_u5d1vy5v","index":0,"type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"sample.txt\",\"replace_from\":\"cpCy\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"cpCy\"}"}}]},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938892,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+
+          data:
+          {"id":"chatcmpl-989","object":"chat.completion.chunk","created":1790938892,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":4619,"completion_tokens":91,"total_tokens":4710}}
+
+
+          data: [DONE]
+
+        compression: none
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:59877
+        connection: keep-alive
+        accept: application/json
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 7.19.0
+        x-stainless-os: MacOS
+        x-stainless-arch: arm64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.3
+        authorization: Bearer fixture
+        user-agent: pi (darwin 25.6.0; arm64)
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '19555'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\n<tools>\n- read: Read a file; each
+          line returned as anchor│content\n- replace: Replace lines by anchor:
+          bare anchors in `remove_from`/`remove_to`, the exact replacement text
+          in `replacement_lines` (one edit per call); include `path`
+          (required)\n- replace_within: Replace part of a line or range by
+          anchor: `replace_old` is matched exactly once inside
+          `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
+          rest of the text untouched; include `path` (required)\n- insert:
+          Insert a text block after or before an anchor line: the anchor line
+          stays; `lines` is the exact text without anchor prefixes; include
+          `path` (required)\n- copy: Copy lines to another position by anchor:
+          `source_from`/`source_to` mark the range, the copy lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- move: Move lines to another position by anchor:
+          `source_from`/`source_to` mark the range, it lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          hits usable directly for `replace`/`insert`; use
+          `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
+          undo_last_change: Single-level undo: reverts a file's last `replace`,
+          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          tools above, you may have access to other custom tools depending on
+          the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
+          when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
+          rows and any served `anchor│content` rows already carry fresh anchors
+          for the changed range.\n- `read`: `[W_ANCHOR_RECLAIMED]` means the
+          session's anchor quota was tight and the listed files' anchors were
+          freed; read a freed file again before editing it.\n- `replace`:
+          same-file same-message calls batch: disjoint ranges, one undo. A call
+          whose anchors resolve nowhere fails alone.\n- `replace`:
+          `replacement_lines` is one string; a pasted `anchor│` prefix is
+          stripped; single line: same anchor for `remove_from` and
+          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          change part of a line, so every character the request does not name is
+          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          exactly from the served row and occur once in the range; a missing or
+          repeated match is refused and returns the current rows.\n-
+          `replace_within`: a batch never groups it; it commits on its own, like
+          `copy` and `move`.\n- `insert`: after inserting a quoted payload,
+          check the post-edit diff for an extra `+anchor│` blank row before the
+          next line.\n- `copy`: the same anchor in `source_from` and `source_to`
+          copies one line; copied lines get fresh anchors in the post-edit diff
+          and the source rows keep theirs.\n- `move`: a cross-file move records
+          one undo entry per file — undo both sides. Lines between source and
+          target may be re-anchored.\n- Use write only for new files or complete
+          rewrites.\n- `undo_last_change`: only the last
+          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          undoable; a `write` clears it, so undo right after a bad diff — review
+          the diff's `-anchor│` rows first to confirm what you're restoring.\n-
+          `undo_last_change`: a cross-file `move` records one undo entry per
+          file; undo both the source and the destination to revert the whole
+          move, because undoing one side alone leaves the moved lines duplicated
+          or missing.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n</rules>\n\n<docs>\nPi documentation (read
+          only when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md), MCP servers (docs/mcp.md), codemode
+          scripts and non-LLM models such as classifiers and image models
+          (docs/codemode.md)\n- When working on pi topics, read the docs and
+          examples, and follow .md cross-references before implementing\n-
+          Always read pi .md files completely and follow links to related docs
+          (e.g., tui.md for TUI API
+          details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
+          sample.txt. Use replace_within to change beta to BETA. Without reading
+          again, use the fresh anchor from the edit diff with replace_within to
+          change BETA to BETTER.
+          Finish."}]},{"role":"assistant","content":null,"reasoning":"The user
+          wants me to:\n1. Read `sample.txt`.\n2. Use `replace_within` to change
+          \"beta\" to \"BETA\".\n3. Then use the fresh anchor from that edit
+          (without reading again) to change \"BETA\" to \"BETTER\" using
+          `replace_within`.\n\nI will start by reading
+          `sample.txt`.","tool_calls":[{"id":"call_dicqrelg","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_dicqrelg"},{"role":"assistant","content":null,"reasoning":"I
+          see the line with \"beta\" has the anchor `cpCy`.\nThe instruction is
+          to change \"beta\" to \"BETA\" using
+          `replace_within`.","tool_calls":[{"id":"call_u5d1vy5v","type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"sample.txt\",\"replace_from\":\"cpCy\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"cpCy\"}"}}]},{"role":"tool","content":"
+          GrBW│alpha\n-cpCy│beta\n+aoKa│BETA\n
+          SSla│gamma","tool_call_id":"call_u5d1vy5v"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file and return it as `anchor│content` rows, one per line: a
+          4-character anchor (letters only, case-sensitive), the `│` separator,
+          then the line content. Target lines in replace and insert by anchor,
+          never by content or line number. Page long files with `offset` and
+          `limit`; when the output says truncated, continue with the hinted
+          `offset/limit`. Images attach visually; binary, directory, and
+          UTF-16/UTF-32 text are rejected; an empty file returns one empty row
+          you can replace to seed
+          content.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}}}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines (or a single line) in a text file by anchor.
+          `remove_from` and `remove_to` are the 4-character anchors of the first
+          and last line to remove, and `replacement_lines` is one string with
+          the exact replacement text: `\"\"` deletes the range, and escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. The text is written exactly as given, and nothing else in the
+          file changes.\nTo change only part of a line without retyping the
+          rest, use `replace_within` instead; it preserves every character the
+          request does not name.\n\nSame-file calls in one message batch:
+          earlier calls reply `In batch N` and the last call shows the combined
+          diff, with one undo for the whole batch.\n\nExample: read served
+          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
+          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
+          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          rows are live anchors for the next edit. Also give `path` matching the
+          file the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"remove_from":{"type":"string","description":"4-char
+          anchor of the FIRST line to remove (never the row
+          content)."},"remove_to":{"type":"string","description":"4-char anchor
+          of the LAST line to
+          remove."},"replacement_lines":{"type":"string","description":"The
+          exact text to write in place of the removed range. \"\" deletes the
+          range, \"\\n\" is one blank line, and a trailing line break sets the
+          last line's ending instead of adding a blank
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          part of a line (or a range of lines) without retyping the rest.
+          `replace_from` and `replace_to` are bare anchors from served
+          `anchor│content` rows marking the first and last line of the range;
+          use the same anchor for one line. `replace_old` is the exact text to
+          find inside that range, copied from the served row; it must occur
+          exactly once. `replace_new` replaces just that match, and every other
+          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
+          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          \"replace_old\": \"legacyCheckout\", \"replace_new\":
+          \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
+          \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
+          diff carries fresh anchors.\n\nBoth strings are exact text; escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. Matching uses LF line breaks and excludes the last line's
+          terminator. A missing match is refused with the current rows, a
+          repeated match with the matching line numbers, so the retry needs no
+          read. Nothing but the matched text changes. Also give `path` matching
+          the file the anchors were served for; it is required and must match
+          anchor
+          ownership.","parameters":{"type":"object","required":["path","replace_from","replace_to","replace_old","replace_new"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"replace_from":{"type":"string","description":"4-char
+          anchor of the FIRST line of the range searched (never the row
+          content)."},"replace_to":{"type":"string","description":"4-char anchor
+          of the LAST line of the range searched; same as replace_from for a
+          single line."},"replace_old":{"type":"string","description":"The exact
+          text to find inside the selected line(s), copied from the served row.
+          It must occur exactly once; the text around it is left untouched.
+          Matching uses LF line breaks and excludes the last line's
+          terminator."},"replace_new":{"type":"string","description":"The exact
+          replacement for the matched text. \"\" deletes the match, \"\\n\"
+          inserts one blank line, and a trailing line break sets the last line's
+          ending instead of adding a blank line; the rest of the range is kept
+          byte-for-byte."}},"additionalProperties":true}}},{"type":"function","function":{"name":"insert","description":"Insert
+          text after or before one existing line in a text file, addressed by a
+          bare anchor from any served anchor│content row. The anchor line is
+          preserved: `lines` go after it with `direction: \"after\"` or before
+          it with `direction: \"before\"`. `lines` is one string holding the
+          exact text to insert; escapes decode once — `\\uXXXX` is the
+          character, `\\\\uXXXX` the literal text.\n\nSame-file calls in one
+          message batch: earlier calls reply `In batch N` and the last call
+          shows the combined diff, with one undo for the whole batch. Also give
+          `path` matching the file the anchor was served for; it is required and
+          must match anchor
+          ownership.","parameters":{"type":"object","required":["path","anchor","direction","lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchor was served for; required and must match anchor
+          ownership."},"anchor":{"type":"string","description":"4-char anchor of
+          the line to insert next to (never the row content). A pasted diff row
+          is stripped with a warning; the anchor line is
+          preserved."},"direction":{"anyOf":[{"type":"string","const":"after"},{"type":"string","const":"before"}],"description":"\"after\"
+          or \"before\""},"lines":{"type":"string","description":"The exact text
+          to insert. \"\" inserts nothing, \"\\n\" is one blank line, and a
+          trailing line break sets the last line's ending instead of adding a
+          blank line. Never include the anchor
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"copy","description":"Copy
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to copy in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the copy goes. `source_from` and `source_to` may belong to
+          a different file than `insert_after`: the lines are copied from the
+          source file and inserted into the destination file, and an empty
+          destination file is seeded with the copied lines. The source lines
+          stay in place, and the copied lines are written exactly as the source
+          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
+          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
+          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          `path` matching the source or destination file the anchors were served
+          for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"move","description":"Move
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to move in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the range goes. `source_from` and `source_to` may belong
+          to a different file than `insert_after`: the range is removed from the
+          source file and inserted into the destination file in one call, and an
+          empty destination file is seeded with the moved lines. `insert_after`
+          must sit outside the source range when both anchors share a file;
+          moving a range in one file to where it already sits reports no
+          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
+          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
+          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          below `top`. Also give `path` matching the source or destination file
+          the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          text files with ripgrep. Hits and context lines come back as
+          `lineNumber │ anchor│content` rows, editable with replace, insert,
+          copy, or move without a new read; the `=== path ===` header and line
+          numbers locate the match. Searches respect `.gitignore`, always skip
+          `.git`, and skip binary and image files silently. A match over 500
+          bytes is shown as a `...` fragment around the hit, but its anchor
+          still covers the whole line. When cut by match limit, raise `limit`
+          (default 100); when cut by rows/bytes, refine `pattern` / narrow
+          path.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex or literal
+          string)"},"path":{"type":"string","description":"Directory or file to
+          search (default: current
+          directory)"},"glob":{"type":"string","description":"Filter files by
+          glob; `*` crosses directories, e.g. `*.ts`. A leading `/` is ignored;
+          relative to the search root or
+          cwd."},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          search"},"literal":{"type":"boolean","description":"Treat pattern as
+          literal text instead of
+          regex"},"context":{"type":"integer","minimum":0,"description":"Lines
+          of context before and after each
+          match"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of matched lines to
+          return"}},"additionalProperties":true}}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
+          the last replace, replace_within, insert, copy, or move on a file,
+          restoring the previous content, BOM, and line endings. Use it when an
+          edit removed or changed the wrong lines. If the file changed since
+          that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
+          modified: the record is kept, so verify the current state with read
+          and stop instead of forcing the undo. A file deleted since the edit is
+          restored. If the output says truncated, use read to see the full
+          file.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}}}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Fri, 02 Oct 2026 11:01:33 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          first"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"replace"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"_"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"within"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          was"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          successful"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          new"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938893,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          anchor"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          for"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          line"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          containing"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          is"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ao"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"Ka"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\nNow"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          need"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          use"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          this"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          fresh"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          anchor"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          change"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938894,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"BET"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"TER"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          using"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          `"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"replace"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"_"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"within"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"`,"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          without"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          reading"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          again"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938895,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938898,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_cjp3dnrq","index":0,"type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"sample.txt\",\"replace_from\":\"aoKa\",\"replace_new\":\"BETTER\",\"replace_old\":\"BETA\",\"replace_to\":\"aoKa\"}"}}]},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938898,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"tool_calls"}]}
+
+
+          data:
+          {"id":"chatcmpl-282","object":"chat.completion.chunk","created":1790938898,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":4745,"completion_tokens":114,"total_tokens":4859}}
+
+
+          data: [DONE]
+
+        compression: none
+  - request:
+      method: POST
+      path: /v1/chat/completions
+      headers:
+        host: 127.0.0.1:59877
+        connection: keep-alive
+        accept: application/json
+        x-stainless-retry-count: '0'
+        x-stainless-timeout: '300'
+        x-stainless-lang: js
+        x-stainless-package-version: 7.19.0
+        x-stainless-os: MacOS
+        x-stainless-arch: arm64
+        x-stainless-runtime: node
+        x-stainless-runtime-version: v22.23.3
+        authorization: Bearer fixture
+        user-agent: pi (darwin 25.6.0; arm64)
+        content-type: application/json
+        accept-language: '*'
+        sec-fetch-mode: cors
+        accept-encoding: gzip, deflate
+        content-length: '20177'
+      body:
+        encoding: utf8
+        data: >-
+          {"model":"gemma4:12b","messages":[{"role":"developer","content":"You
+          are an expert coding assistant operating inside pi, a coding agent
+          harness. You help users by reading files, executing commands, editing
+          code, and writing new files.\n\n<tools>\n- read: Read a file; each
+          line returned as anchor│content\n- replace: Replace lines by anchor:
+          bare anchors in `remove_from`/`remove_to`, the exact replacement text
+          in `replacement_lines` (one edit per call); include `path`
+          (required)\n- replace_within: Replace part of a line or range by
+          anchor: `replace_old` is matched exactly once inside
+          `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
+          rest of the text untouched; include `path` (required)\n- insert:
+          Insert a text block after or before an anchor line: the anchor line
+          stays; `lines` is the exact text without anchor prefixes; include
+          `path` (required)\n- copy: Copy lines to another position by anchor:
+          `source_from`/`source_to` mark the range, the copy lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- move: Move lines to another position by anchor:
+          `source_from`/`source_to` mark the range, it lands after
+          `insert_after`; the anchors resolve both files; include `path`
+          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          hits usable directly for `replace`/`insert`; use
+          `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
+          undo_last_change: Single-level undo: reverts a file's last `replace`,
+          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          tools above, you may have access to other custom tools depending on
+          the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
+          when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
+          rows and any served `anchor│content` rows already carry fresh anchors
+          for the changed range.\n- `read`: `[W_ANCHOR_RECLAIMED]` means the
+          session's anchor quota was tight and the listed files' anchors were
+          freed; read a freed file again before editing it.\n- `replace`:
+          same-file same-message calls batch: disjoint ranges, one undo. A call
+          whose anchors resolve nowhere fails alone.\n- `replace`:
+          `replacement_lines` is one string; a pasted `anchor│` prefix is
+          stripped; single line: same anchor for `remove_from` and
+          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          change part of a line, so every character the request does not name is
+          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          exactly from the served row and occur once in the range; a missing or
+          repeated match is refused and returns the current rows.\n-
+          `replace_within`: a batch never groups it; it commits on its own, like
+          `copy` and `move`.\n- `insert`: after inserting a quoted payload,
+          check the post-edit diff for an extra `+anchor│` blank row before the
+          next line.\n- `copy`: the same anchor in `source_from` and `source_to`
+          copies one line; copied lines get fresh anchors in the post-edit diff
+          and the source rows keep theirs.\n- `move`: a cross-file move records
+          one undo entry per file — undo both sides. Lines between source and
+          target may be re-anchored.\n- Use write only for new files or complete
+          rewrites.\n- `undo_last_change`: only the last
+          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          undoable; a `write` clears it, so undo right after a bad diff — review
+          the diff's `-anchor│` rows first to confirm what you're restoring.\n-
+          `undo_last_change`: a cross-file `move` records one undo entry per
+          file; undo both the source and the destination to revert the whole
+          move, because undoing one side alone leaves the moved lines duplicated
+          or missing.\n- Be concise in your responses\n- Show file paths clearly
+          when working with files\n</rules>\n\n<docs>\nPi documentation (read
+          only when the user asks about pi itself, its SDK, extensions, themes,
+          skills, or TUI):\n- Main documentation:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/README.md\n-
+          Additional docs:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/docs\n-
+          Examples:
+          /Users/ananthakumaran/.npm/lib/node_modules/@earendil-works/pi-coding-agent/examples
+          (extensions, custom tools, SDK)\n- When reading pi docs or examples,
+          resolve docs/... under Additional docs and examples/... under
+          Examples, not the current working directory\n- When asked about:
+          extensions (docs/extensions.md, examples/extensions/), themes
+          (docs/themes.md), skills (docs/skills.md), prompt templates
+          (docs/prompt-templates.md), TUI components (docs/tui.md), keybindings
+          (docs/keybindings.md), SDK integrations (docs/sdk.md), custom
+          providers (docs/custom-provider.md), adding models (docs/models.md),
+          pi packages (docs/packages.md), environment variables
+          (docs/environment-variables.md), MCP servers (docs/mcp.md), codemode
+          scripts and non-LLM models such as classifiers and image models
+          (docs/codemode.md)\n- When working on pi topics, read the docs and
+          examples, and follow .md cross-references before implementing\n-
+          Always read pi .md files completely and follow links to related docs
+          (e.g., tui.md for TUI API
+          details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
+          sample.txt. Use replace_within to change beta to BETA. Without reading
+          again, use the fresh anchor from the edit diff with replace_within to
+          change BETA to BETTER.
+          Finish."}]},{"role":"assistant","content":null,"reasoning":"The user
+          wants me to:\n1. Read `sample.txt`.\n2. Use `replace_within` to change
+          \"beta\" to \"BETA\".\n3. Then use the fresh anchor from that edit
+          (without reading again) to change \"BETA\" to \"BETTER\" using
+          `replace_within`.\n\nI will start by reading
+          `sample.txt`.","tool_calls":[{"id":"call_dicqrelg","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_dicqrelg"},{"role":"assistant","content":null,"reasoning":"I
+          see the line with \"beta\" has the anchor `cpCy`.\nThe instruction is
+          to change \"beta\" to \"BETA\" using
+          `replace_within`.","tool_calls":[{"id":"call_u5d1vy5v","type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"sample.txt\",\"replace_from\":\"cpCy\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"cpCy\"}"}}]},{"role":"tool","content":"
+          GrBW│alpha\n-cpCy│beta\n+aoKa│BETA\n
+          SSla│gamma","tool_call_id":"call_u5d1vy5v"},{"role":"assistant","content":null,"reasoning":"The
+          first `replace_within` was successful. The new anchor for the line
+          containing \"BETA\" is `aoKa`.\nNow I need to use this fresh anchor to
+          change \"BETA\" to \"BETTER\" using `replace_within`, without reading
+          again.","tool_calls":[{"id":"call_cjp3dnrq","type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"sample.txt\",\"replace_from\":\"aoKa\",\"replace_new\":\"BETTER\",\"replace_old\":\"BETA\",\"replace_to\":\"aoKa\"}"}}]},{"role":"tool","content":"
+          GrBW│alpha\n-aoKa│BETA\n+FxPS│BETTER\n
+          SSla│gamma","tool_call_id":"call_cjp3dnrq"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          a text file and return it as `anchor│content` rows, one per line: a
+          4-character anchor (letters only, case-sensitive), the `│` separator,
+          then the line content. Target lines in replace and insert by anchor,
+          never by content or line number. Page long files with `offset` and
+          `limit`; when the output says truncated, continue with the hinted
+          `offset/limit`. Images attach visually; binary, directory, and
+          UTF-16/UTF-32 text are rejected; an empty file returns one empty row
+          you can replace to seed
+          content.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to read (relative or
+          absolute)"},"offset":{"type":"integer","minimum":1,"description":"Line
+          number to start reading from
+          (1-indexed)"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of lines to
+          read"}}}}},{"type":"function","function":{"name":"replace","description":"Replace
+          a range of lines (or a single line) in a text file by anchor.
+          `remove_from` and `remove_to` are the 4-character anchors of the first
+          and last line to remove, and `replacement_lines` is one string with
+          the exact replacement text: `\"\"` deletes the range, and escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. The text is written exactly as given, and nothing else in the
+          file changes.\nTo change only part of a line without retyping the
+          rest, use `replace_within` instead; it preserves every character the
+          request does not name.\n\nSame-file calls in one message batch:
+          earlier calls reply `In batch N` and the last call shows the combined
+          diff, with one undo for the whole batch.\n\nExample: read served
+          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
+          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
+          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          rows are live anchors for the next edit. Also give `path` matching the
+          file the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"remove_from":{"type":"string","description":"4-char
+          anchor of the FIRST line to remove (never the row
+          content)."},"remove_to":{"type":"string","description":"4-char anchor
+          of the LAST line to
+          remove."},"replacement_lines":{"type":"string","description":"The
+          exact text to write in place of the removed range. \"\" deletes the
+          range, \"\\n\" is one blank line, and a trailing line break sets the
+          last line's ending instead of adding a blank
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          part of a line (or a range of lines) without retyping the rest.
+          `replace_from` and `replace_to` are bare anchors from served
+          `anchor│content` rows marking the first and last line of the range;
+          use the same anchor for one line. `replace_old` is the exact text to
+          find inside that range, copied from the served row; it must occur
+          exactly once. `replace_new` replaces just that match, and every other
+          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
+          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          \"replace_old\": \"legacyCheckout\", \"replace_new\":
+          \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
+          \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
+          diff carries fresh anchors.\n\nBoth strings are exact text; escapes
+          decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
+          text. Matching uses LF line breaks and excludes the last line's
+          terminator. A missing match is refused with the current rows, a
+          repeated match with the matching line numbers, so the retry needs no
+          read. Nothing but the matched text changes. Also give `path` matching
+          the file the anchors were served for; it is required and must match
+          anchor
+          ownership.","parameters":{"type":"object","required":["path","replace_from","replace_to","replace_old","replace_new"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchors were served for; required and must match
+          anchor
+          ownership."},"replace_from":{"type":"string","description":"4-char
+          anchor of the FIRST line of the range searched (never the row
+          content)."},"replace_to":{"type":"string","description":"4-char anchor
+          of the LAST line of the range searched; same as replace_from for a
+          single line."},"replace_old":{"type":"string","description":"The exact
+          text to find inside the selected line(s), copied from the served row.
+          It must occur exactly once; the text around it is left untouched.
+          Matching uses LF line breaks and excludes the last line's
+          terminator."},"replace_new":{"type":"string","description":"The exact
+          replacement for the matched text. \"\" deletes the match, \"\\n\"
+          inserts one blank line, and a trailing line break sets the last line's
+          ending instead of adding a blank line; the rest of the range is kept
+          byte-for-byte."}},"additionalProperties":true}}},{"type":"function","function":{"name":"insert","description":"Insert
+          text after or before one existing line in a text file, addressed by a
+          bare anchor from any served anchor│content row. The anchor line is
+          preserved: `lines` go after it with `direction: \"after\"` or before
+          it with `direction: \"before\"`. `lines` is one string holding the
+          exact text to insert; escapes decode once — `\\uXXXX` is the
+          character, `\\\\uXXXX` the literal text.\n\nSame-file calls in one
+          message batch: earlier calls reply `In batch N` and the last call
+          shows the combined diff, with one undo for the whole batch. Also give
+          `path` matching the file the anchor was served for; it is required and
+          must match anchor
+          ownership.","parameters":{"type":"object","required":["path","anchor","direction","lines"],"properties":{"path":{"type":"string","description":"Path
+          to the file the anchor was served for; required and must match anchor
+          ownership."},"anchor":{"type":"string","description":"4-char anchor of
+          the line to insert next to (never the row content). A pasted diff row
+          is stripped with a warning; the anchor line is
+          preserved."},"direction":{"anyOf":[{"type":"string","const":"after"},{"type":"string","const":"before"}],"description":"\"after\"
+          or \"before\""},"lines":{"type":"string","description":"The exact text
+          to insert. \"\" inserts nothing, \"\\n\" is one blank line, and a
+          trailing line break sets the last line's ending instead of adding a
+          blank line. Never include the anchor
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"copy","description":"Copy
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to copy in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the copy goes. `source_from` and `source_to` may belong to
+          a different file than `insert_after`: the lines are copied from the
+          source file and inserted into the destination file, and an empty
+          destination file is seeded with the copied lines. The source lines
+          stay in place, and the copied lines are written exactly as the source
+          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
+          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
+          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          `path` matching the source or destination file the anchors were served
+          for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"move","description":"Move
+          a range of lines to another position, targeted by 4-character anchors
+          from any served anchor│content row. Give `source_from` and `source_to`
+          as bare anchors marking the first and last line to move in the source
+          file, and `insert_after` as the bare anchor of the destination line
+          after which the range goes. `source_from` and `source_to` may belong
+          to a different file than `insert_after`: the range is removed from the
+          source file and inserted into the destination file in one call, and an
+          empty destination file is seeded with the moved lines. `insert_after`
+          must sit outside the source range when both anchors share a file;
+          moving a range in one file to where it already sits reports no
+          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
+          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
+          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          below `top`. Also give `path` matching the source or destination file
+          the anchors were served for; it is required and must match anchor
+          ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
+          to the source or destination file the anchors were served for;
+          required and must match anchor
+          ownership."},"source_from":{"type":"string","description":"4-char
+          anchor of the FIRST source line to copy (never the row
+          content)."},"source_to":{"type":"string","description":"4-char anchor
+          of the LAST source line to
+          copy."},"insert_after":{"type":"string","description":"4-char anchor
+          of the destination line; the block goes after it and may live in
+          another
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          text files with ripgrep. Hits and context lines come back as
+          `lineNumber │ anchor│content` rows, editable with replace, insert,
+          copy, or move without a new read; the `=== path ===` header and line
+          numbers locate the match. Searches respect `.gitignore`, always skip
+          `.git`, and skip binary and image files silently. A match over 500
+          bytes is shown as a `...` fragment around the hit, but its anchor
+          still covers the whole line. When cut by match limit, raise `limit`
+          (default 100); when cut by rows/bytes, refine `pattern` / narrow
+          path.","parameters":{"type":"object","required":["pattern"],"properties":{"pattern":{"type":"string","description":"Search
+          pattern (regex or literal
+          string)"},"path":{"type":"string","description":"Directory or file to
+          search (default: current
+          directory)"},"glob":{"type":"string","description":"Filter files by
+          glob; `*` crosses directories, e.g. `*.ts`. A leading `/` is ignored;
+          relative to the search root or
+          cwd."},"ignoreCase":{"type":"boolean","description":"Case-insensitive
+          search"},"literal":{"type":"boolean","description":"Treat pattern as
+          literal text instead of
+          regex"},"context":{"type":"integer","minimum":0,"description":"Lines
+          of context before and after each
+          match"},"limit":{"type":"integer","minimum":1,"description":"Maximum
+          number of matched lines to
+          return"}},"additionalProperties":true}}},{"type":"function","function":{"name":"write","description":"Write
+          content to a file. Creates the file if it doesn't exist, overwrites if
+          it does. Automatically creates parent
+          directories.","parameters":{"type":"object","required":["path","content"],"properties":{"path":{"type":"string","description":"Path
+          to the file to write (relative or
+          absolute)"},"content":{"type":"string","description":"Content to write
+          to the
+          file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
+          the last replace, replace_within, insert, copy, or move on a file,
+          restoring the previous content, BOM, and line endings. Use it when an
+          edit removed or changed the wrong lines. If the file changed since
+          that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
+          modified: the record is kept, so verify the current state with read
+          and stop instead of forcing the undo. A file deleted since the edit is
+          restored. If the output says truncated, use read to see the full
+          file.","parameters":{"type":"object","required":["path"],"properties":{"path":{"type":"string","description":"Path
+          to the file to undo"}}}}}],"reasoning_effort":"low"}
+        compression: none
+    response:
+      status:
+        code: 200
+      headers:
+        content-type: text/event-stream
+        date: Fri, 02 Oct 2026 11:01:39 GMT
+        transfer-encoding: chunked
+      body:
+        encoding: utf8
+        data: >+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"I"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          have"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          completed"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          the"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          requested"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"
+          tasks"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","reasoning":"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"The"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          word"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"beta"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          was"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          successfully"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          changed"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938899,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\","},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          and"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          then"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          that"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"B"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"ETA"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          was"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          updated"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          to"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"
+          \""},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"BET"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"TER"},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"\"."},"finish_reason":null}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop"}]}
+
+
+          data:
+          {"id":"chatcmpl-552","object":"chat.completion.chunk","created":1790938900,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[],"usage":{"prompt_tokens":4894,"completion_tokens":40,"total_tokens":4934}}
+
+
+          data: [DONE]
+
+        compression: none

@@ -186,6 +186,11 @@
             (with-temp-buffer
               (insert-file-contents sample)
               (buffer-string)))
+           (destination (expand-file-name "destination.md" project))
+           (original-destination
+            (with-temp-buffer
+              (insert-file-contents destination)
+              (buffer-string)))
            (sessions-directory (expand-file-name "sessions" agent-directory))
            (default-directory (file-name-as-directory project))
            (pimacs-process-environment
@@ -195,9 +200,9 @@
                   (concat "XDG_CONFIG_HOME=" (expand-file-name ".config" agent-directory))
                   (concat "FIXTURE_SCENARIO=" ,scenario)))
            (pimacs-flags
-            (list "--tools" "read,replace,insert,anchor_grep,write,undo_last_change"
-                  "--extension" fixture
-                  "--extension" hashline)))
+            (list "--tools" "read,replace,replace_within,insert,copy,move,anchor_grep,write,undo_last_change"
+                  "--extension" hashline
+                  "--extension" fixture)))
       (when (file-exists-p sessions-directory)
         (delete-directory sessions-directory t))
       (pimacs-enable-extensions "pi-hashline-edit-pro")
@@ -213,6 +218,7 @@
               (buffer-substring (point-min) (point-max)))))
         (ignore-errors (pimacs-quit-chat))
         (write-region original-sample nil sample nil 'silent)
+        (write-region original-destination nil destination nil 'silent)
         (when (file-exists-p sessions-directory)
           (delete-directory sessions-directory t))))))
 
@@ -245,5 +251,37 @@
    "hashline-write"
    (pimacs-extensions--send-prompt-and-wait
     "Use the write tool exactly once to create /tmp/test1.md with this exact content, then finish without using any other tool:\n# Test File 1\n\nThis is a second test markdown file.\n\n## Sample Content\n\n- Item 1\n- Item 2\n- Item 3\n\nAdditional content can be added below.")))
+
+(defun pimacs-extensions--file-text (file)
+  (with-temp-buffer
+    (insert-file-contents file)
+    (buffer-string)))
+
+(ert-deftest pimacs-extensions-hashline-replace-within ()
+  (pimacs-extensions--with-integration-project
+   "hashline-replace-within"
+   (pimacs-extensions--send-prompt-and-wait
+    "Read sample.txt. Use replace_within to change beta to BETA. Without reading again, use the fresh anchor from the edit diff with replace_within to change BETA to BETTER. Finish.")
+   (should (equal (pimacs-extensions--file-text sample) "alpha\nBETTER\ngamma\n"))))
+
+(ert-deftest pimacs-extensions-hashline-copy ()
+  (pimacs-extensions--with-integration-project
+   "hashline-copy"
+   (pimacs-extensions--send-prompt-and-wait
+    "Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_within to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.")
+   (should (equal (pimacs-extensions--file-text sample) original-sample))
+   (should (equal (pimacs-extensions--file-text destination) "top\nBETA\nbeta\n"))))
+
+(ert-deftest pimacs-extensions-hashline-move ()
+  (pimacs-extensions--with-integration-project
+   "hashline-move"
+   (pimacs-extensions--send-prompt-and-wait
+    "Read sample.txt and destination.md. Use move exactly once to move the beta line from sample.txt after the top line in destination.md, with path sample.txt. Finish without undoing or reading again.")
+   (should (equal (pimacs-extensions--file-text sample) "alpha\ngamma\n"))
+   (should (equal (pimacs-extensions--file-text destination) "top\nbeta\nbeta\n"))
+   (pimacs-extensions--send-prompt-and-wait
+    "Now undo the cross-file move completely with undo_last_change on both sample.txt and destination.md, then finish.")
+   (should (equal (pimacs-extensions--file-text sample) original-sample))
+   (should (equal (pimacs-extensions--file-text destination) original-destination))))
 
 ;;; pimacs-extensions-integration-tests.el ends here

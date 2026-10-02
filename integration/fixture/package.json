@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "js-yaml": "^4.1.0",
-    "pi-hashline-edit-pro": "^4.3.5",
+    "pi-hashline-edit-pro": "^5.0.0",
     "proxay": "^1.9.0"
   },
   "devDependencies": {
