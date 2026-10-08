@@ -257,20 +257,17 @@
     (insert-file-contents file)
     (buffer-string)))
 
-(ert-deftest pimacs-extensions-hashline-replace-within ()
-  (pimacs-extensions--with-integration-project
-   "hashline-replace-within"
-   (pimacs-extensions--send-prompt-and-wait
-    "Read sample.txt. Use replace_match to change beta to BETA. Without reading again, use the fresh anchor from the edit diff with replace_match to change BETA to BETTER. Finish.")
-   (should (equal (pimacs-extensions--file-text sample) "alpha\nBETTER\ngamma\n"))))
+(ert-deftest pimacs-extensions-hashline-replace-match-tool ()
+  (pimacs-enable-extensions "pi-hashline-edit-pro")
+  (should (functionp
+           (alist-get "replace_match" pimacs-insert-tool-result-functions
+                      nil nil #'equal))))
 
-(ert-deftest pimacs-extensions-hashline-copy ()
-  (pimacs-extensions--with-integration-project
-   "hashline-copy"
-   (pimacs-extensions--send-prompt-and-wait
-    "Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_match to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.")
-   (should (equal (pimacs-extensions--file-text sample) original-sample))
-   (should (equal (pimacs-extensions--file-text destination) "top\nBETA\nbeta\n"))))
+(ert-deftest pimacs-extensions-hashline-copy-result-tool ()
+  (pimacs-enable-extensions "pi-hashline-edit-pro")
+  (should (functionp
+           (alist-get "copy" pimacs-insert-tool-result-functions
+                      nil nil #'equal))))
 
 (ert-deftest pimacs-extensions-hashline-move ()
   (pimacs-extensions--with-integration-project

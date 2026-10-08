@@ -31,7 +31,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -47,7 +47,7 @@ http_interactions:
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -59,12 +59,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -73,7 +73,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -106,7 +106,7 @@ http_interactions:
           details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
           sample.txt and destination.md. Use copy exactly once to copy the beta
           line from sample.txt after the top line in destination.md, with path
-          sample.txt. Then without reading again, use replace_within to change
+          sample.txt. Then without reading again, use replace_match to change
           only the newly copied beta line in destination.md to BETA, using its
           fresh anchor from the copy diff. Leave the pre-existing beta line
           alone.
@@ -133,7 +133,7 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
@@ -154,7 +154,7 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
@@ -294,7 +294,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -1365,7 +1365,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -1381,7 +1381,7 @@ http_interactions:
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -1393,12 +1393,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -1407,7 +1407,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -1440,7 +1440,7 @@ http_interactions:
           details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
           sample.txt and destination.md. Use copy exactly once to copy the beta
           line from sample.txt after the top line in destination.md, with path
-          sample.txt. Then without reading again, use replace_within to change
+          sample.txt. Then without reading again, use replace_match to change
           only the newly copied beta line in destination.md to BETA, using its
           fresh anchor from the copy diff. Leave the pre-existing beta line
           alone. Finish."}]},{"role":"assistant","content":null,"reasoning":"The
@@ -1448,7 +1448,7 @@ http_interactions:
           `sample.txt` and `destination.md`.\n2. Use `copy` to copy the \"beta\"
           line from `sample.txt` to `destination.md` after the \"top\" line.\n3.
           Use the fresh anchor provided in the `copy` result to perform a
-          `replace_within` on the newly copied line in `destination.md`,
+          `replace_match` on the newly copied line in `destination.md`,
           changing \"beta\" to \"BETA\".\n\nI need to:\n- Read `sample.txt`:
           assume it contains something like \"beta line\".\n- Read
           `destination.md`: assume it has a \"top\" line and an existing
@@ -1456,7 +1456,7 @@ http_interactions:
           to after the \"top\" line in `destination.md` (anchor Y).\n- The copy
           operation will return a diff with fresh anchors for
           `destination.md`.\n- Use the new anchor of the copied line to replace
-          its content via `replace_within`.\n\nLet's start by reading the
+          its content via `replace_match`.\n\nLet's start by reading the
           files.","tool_calls":[{"id":"call_lw2l8vxv","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_lw2l8vxv"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
@@ -1480,7 +1480,7 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
@@ -1501,7 +1501,7 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
@@ -1641,7 +1641,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -1837,7 +1837,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -1853,7 +1853,7 @@ http_interactions:
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -1865,12 +1865,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -1879,7 +1879,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -1912,7 +1912,7 @@ http_interactions:
           details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
           sample.txt and destination.md. Use copy exactly once to copy the beta
           line from sample.txt after the top line in destination.md, with path
-          sample.txt. Then without reading again, use replace_within to change
+          sample.txt. Then without reading again, use replace_match to change
           only the newly copied beta line in destination.md to BETA, using its
           fresh anchor from the copy diff. Leave the pre-existing beta line
           alone. Finish."}]},{"role":"assistant","content":null,"reasoning":"The
@@ -1920,7 +1920,7 @@ http_interactions:
           `sample.txt` and `destination.md`.\n2. Use `copy` to copy the \"beta\"
           line from `sample.txt` to `destination.md` after the \"top\" line.\n3.
           Use the fresh anchor provided in the `copy` result to perform a
-          `replace_within` on the newly copied line in `destination.md`,
+          `replace_match` on the newly copied line in `destination.md`,
           changing \"beta\" to \"BETA\".\n\nI need to:\n- Read `sample.txt`:
           assume it contains something like \"beta line\".\n- Read
           `destination.md`: assume it has a \"top\" line and an existing
@@ -1928,7 +1928,7 @@ http_interactions:
           to after the \"top\" line in `destination.md` (anchor Y).\n- The copy
           operation will return a diff with fresh anchors for
           `destination.md`.\n- Use the new anchor of the copied line to replace
-          its content via `replace_within`.\n\nLet's start by reading the
+          its content via `replace_match`.\n\nLet's start by reading the
           files.","tool_calls":[{"id":"call_lw2l8vxv","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_lw2l8vxv"},{"role":"assistant","content":null,"reasoning":"Okay,
           I have the lines from `sample.txt`. The beta line is
           `cpCy│beta`.\n\nNow read
@@ -1955,7 +1955,7 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
@@ -1976,7 +1976,7 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
@@ -2116,7 +2116,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -6633,7 +6633,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -6649,7 +6649,7 @@ http_interactions:
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -6661,12 +6661,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -6675,7 +6675,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -6708,7 +6708,7 @@ http_interactions:
           details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
           sample.txt and destination.md. Use copy exactly once to copy the beta
           line from sample.txt after the top line in destination.md, with path
-          sample.txt. Then without reading again, use replace_within to change
+          sample.txt. Then without reading again, use replace_match to change
           only the newly copied beta line in destination.md to BETA, using its
           fresh anchor from the copy diff. Leave the pre-existing beta line
           alone. Finish."}]},{"role":"assistant","content":null,"reasoning":"The
@@ -6716,7 +6716,7 @@ http_interactions:
           `sample.txt` and `destination.md`.\n2. Use `copy` to copy the \"beta\"
           line from `sample.txt` to `destination.md` after the \"top\" line.\n3.
           Use the fresh anchor provided in the `copy` result to perform a
-          `replace_within` on the newly copied line in `destination.md`,
+          `replace_match` on the newly copied line in `destination.md`,
           changing \"beta\" to \"BETA\".\n\nI need to:\n- Read `sample.txt`:
           assume it contains something like \"beta line\".\n- Read
           `destination.md`: assume it has a \"top\" line and an existing
@@ -6724,7 +6724,7 @@ http_interactions:
           to after the \"top\" line in `destination.md` (anchor Y).\n- The copy
           operation will return a diff with fresh anchors for
           `destination.md`.\n- Use the new anchor of the copied line to replace
-          its content via `replace_within`.\n\nLet's start by reading the
+          its content via `replace_match`.\n\nLet's start by reading the
           files.","tool_calls":[{"id":"call_lw2l8vxv","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_lw2l8vxv"},{"role":"assistant","content":null,"reasoning":"Okay,
           I have the lines from `sample.txt`. The beta line is
           `cpCy│beta`.\n\nNow read
@@ -6815,7 +6815,7 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
@@ -6836,7 +6836,7 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
@@ -6976,7 +6976,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -8026,7 +8026,7 @@ http_interactions:
 
 
           data:
-          {"id":"chatcmpl-895","object":"chat.completion.chunk","created":1790938755,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_7owz5qa1","index":0,"type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"destination.md\",\"replace_from\":\"UIJe\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"UIJe\"}"}}]},"finish_reason":null}]}
+          {"id":"chatcmpl-895","object":"chat.completion.chunk","created":1790938755,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_7owz5qa1","index":0,"type":"function","function":{"name":"replace_match","arguments":"{\"path\":\"destination.md\",\"replace_from\":\"UIJe\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"UIJe\"}"}}]},"finish_reason":null}]}
 
 
           data:
@@ -8072,7 +8072,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -8088,7 +8088,7 @@ http_interactions:
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -8100,12 +8100,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -8114,7 +8114,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -8147,7 +8147,7 @@ http_interactions:
           details)\n</docs>\n\n<cwd>\n/Users/ananthakumaran/work/repos/pimacs-extensions/integration/project\n</cwd>"},{"role":"user","content":[{"type":"text","text":"Read
           sample.txt and destination.md. Use copy exactly once to copy the beta
           line from sample.txt after the top line in destination.md, with path
-          sample.txt. Then without reading again, use replace_within to change
+          sample.txt. Then without reading again, use replace_match to change
           only the newly copied beta line in destination.md to BETA, using its
           fresh anchor from the copy diff. Leave the pre-existing beta line
           alone. Finish."}]},{"role":"assistant","content":null,"reasoning":"The
@@ -8155,7 +8155,7 @@ http_interactions:
           `sample.txt` and `destination.md`.\n2. Use `copy` to copy the \"beta\"
           line from `sample.txt` to `destination.md` after the \"top\" line.\n3.
           Use the fresh anchor provided in the `copy` result to perform a
-          `replace_within` on the newly copied line in `destination.md`,
+          `replace_match` on the newly copied line in `destination.md`,
           changing \"beta\" to \"BETA\".\n\nI need to:\n- Read `sample.txt`:
           assume it contains something like \"beta line\".\n- Read
           `destination.md`: assume it has a \"top\" line and an existing
@@ -8163,7 +8163,7 @@ http_interactions:
           to after the \"top\" line in `destination.md` (anchor Y).\n- The copy
           operation will return a diff with fresh anchors for
           `destination.md`.\n- Use the new anchor of the copied line to replace
-          its content via `replace_within`.\n\nLet's start by reading the
+          its content via `replace_match`.\n\nLet's start by reading the
           files.","tool_calls":[{"id":"call_lw2l8vxv","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_lw2l8vxv"},{"role":"assistant","content":null,"reasoning":"Okay,
           I have the lines from `sample.txt`. The beta line is
           `cpCy│beta`.\n\nNow read
@@ -8234,18 +8234,18 @@ http_interactions:
           qrAt│beta","tool_call_id":"call_n2m19t4g"},{"role":"assistant","content":null,"reasoning":"The
           copy was successful. The new line has a fresh anchor `UIJe`.\n\nNow I
           need to perform the second step.\n\"without reading again, use
-          replace_within to change only the newly copied beta line in
+          replace_match to change only the newly copied beta line in
           destination.md to BETA, using its fresh anchor from the copy
           diff.\"\n\nThe new line is `+UIJe│beta` and we want to change \"beta\"
-          to \"BETA\". Use `replace_within`.\n\nWait, I need to determine if it
-          should be `replace_within` on exactly that one line.\nThe prompt says:
+          to \"BETA\". Use `replace_match`.\n\nWait, I need to determine if it
+          should be `replace_match` on exactly that one line.\nThe prompt says:
           \"change only the newly copied beta line in destination.md to BETA...
           Leave the pre-existing beta line alone.\" Since there's another line
           with \"beta\" (at `qrAt`), and I need to target *only* the new one,
           using its specific anchor (`UIJe`) ensures this.\n\nActually, if I use
-          `replace_within` on range `UIJe` to `UIJe`, it will only affect that
+          `replace_match` on range `UIJe` to `UIJe`, it will only affect that
           line.\nThe text is \"beta\", so I'll replace `beta` with
-          `BETA`.","tool_calls":[{"id":"call_7owz5qa1","type":"function","function":{"name":"replace_within","arguments":"{\"path\":\"destination.md\",\"replace_from\":\"UIJe\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"UIJe\"}"}}]},{"role":"tool","content":"
+          `BETA`.","tool_calls":[{"id":"call_7owz5qa1","type":"function","function":{"name":"replace_match","arguments":"{\"path\":\"destination.md\",\"replace_from\":\"UIJe\",\"replace_new\":\"BETA\",\"replace_old\":\"beta\",\"replace_to\":\"UIJe\"}"}}]},{"role":"tool","content":"
           ImJs│top\n-UIJe│beta\n+CVgf│BETA\n
           qrAt│beta","tool_call_id":"call_7owz5qa1"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
@@ -8270,7 +8270,7 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
@@ -8291,7 +8291,7 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
@@ -8431,7 +8431,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is

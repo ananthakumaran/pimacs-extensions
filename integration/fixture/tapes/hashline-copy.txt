@@ -1,16 +1,16 @@
-user> Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_within to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.
+user> Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_match to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.
 
 assistant> The user wants to perform a specific sequence of operations:
 1. Read sample.txt and destination.md.
 2. Use copy to copy the "beta" line from sample.txt to destination.md after the "top" line.
-3. Use the fresh anchor provided in the copy result to perform a replace_within on the newly copied line in destination.md, changing "beta" to "BETA".
+3. Use the fresh anchor provided in the copy result to perform a replace_match on the newly copied line in destination.md, changing "beta" to "BETA".
 
 I need to:
 ▪ Read sample.txt: assume it contains something like "beta line".
 ▪ Read destination.md: assume it has a "top" line and an existing "beta" line.
 ▪ Copy the "beta" line from sample.txt (anchor X) to after the "top" line in destination.md (anchor Y).
 ▪ The copy operation will return a diff with fresh anchors for destination.md.
-▪ Use the new anchor of the copied line to replace its content via replace_within.
+▪ Use the new anchor of the copied line to replace its content via replace_match.
 
 Let's start by reading the files.
 
@@ -83,17 +83,17 @@ destination.md
 assistant> The copy was successful. The new line has a fresh anchor UIJe.
 
 Now I need to perform the second step.
-"without reading again, use replace_within to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff."
+"without reading again, use replace_match to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff."
 
-The new line is +UIJe│beta and we want to change "beta" to "BETA". Use replace_within.
+The new line is +UIJe│beta and we want to change "beta" to "BETA". Use replace_match.
 
-Wait, I need to determine if it should be replace_within on exactly that one line.
+Wait, I need to determine if it should be replace_match on exactly that one line.
 The prompt says: "change only the newly copied beta line in destination.md to BETA... Leave the pre-existing beta line alone." Since there's another line with "beta" (at qrAt), and I need to target only the new one, using its specific anchor (UIJe) ensures this.
 
-Actually, if I use replace_within on range UIJe to UIJe, it will only affect that line.
+Actually, if I use replace_match on range UIJe to UIJe, it will only affect that line.
 The text is "beta", so I'll replace beta with BETA.
 
-replace_within destination.md
+replace_match destination.md
 @@ -1,3 +1,3 @@
  top
 +BETA
@@ -114,7 +114,7 @@ qrAt│beta
 
 This matches requirements because it changed only the new one to BETA and left the old one as beta.
 Actually, I should check if there was anything else mentioned.
-"Use copy exactly once ... then without reading again, use replace_within to change only the newly copied beta line in destination.md to BETA ... Leave the pre-existing beta line alone."
+"Use copy exactly once ... then without reading again, use replace_match to change only the newly copied beta line in destination.md to BETA ... Leave the pre-existing beta line alone."
 
 The prompt is satisfied.I have successfully performed both steps as requested:
 1. Copied the beta line from sample.txt into destination.md after the top line.
