@@ -200,7 +200,7 @@
                   (concat "XDG_CONFIG_HOME=" (expand-file-name ".config" agent-directory))
                   (concat "FIXTURE_SCENARIO=" ,scenario)))
            (pimacs-flags
-            (list "--tools" "read,replace,replace_within,insert,copy,move,anchor_grep,write,undo_last_change"
+            (list "--tools" "read,replace,replace_match,insert,copy,move,anchor_grep,write,undo_last_change"
                   "--extension" hashline
                   "--extension" fixture)))
       (when (file-exists-p sessions-directory)
@@ -261,14 +261,14 @@
   (pimacs-extensions--with-integration-project
    "hashline-replace-within"
    (pimacs-extensions--send-prompt-and-wait
-    "Read sample.txt. Use replace_within to change beta to BETA. Without reading again, use the fresh anchor from the edit diff with replace_within to change BETA to BETTER. Finish.")
+    "Read sample.txt. Use replace_match to change beta to BETA. Without reading again, use the fresh anchor from the edit diff with replace_match to change BETA to BETTER. Finish.")
    (should (equal (pimacs-extensions--file-text sample) "alpha\nBETTER\ngamma\n"))))
 
 (ert-deftest pimacs-extensions-hashline-copy ()
   (pimacs-extensions--with-integration-project
    "hashline-copy"
    (pimacs-extensions--send-prompt-and-wait
-    "Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_within to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.")
+    "Read sample.txt and destination.md. Use copy exactly once to copy the beta line from sample.txt after the top line in destination.md, with path sample.txt. Then without reading again, use replace_match to change only the newly copied beta line in destination.md to BETA, using its fresh anchor from the copy diff. Leave the pre-existing beta line alone. Finish.")
    (should (equal (pimacs-extensions--file-text sample) original-sample))
    (should (equal (pimacs-extensions--file-text destination) "top\nBETA\nbeta\n"))))
 

@@ -324,7 +324,7 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   (pimacs-hashline--alias-tool-function
    "anchor_grep" "grep"
    'pimacs-insert-tool-args-functions "argument inserter")
-  (dolist (tool '("insert" "replace" "replace_within" "copy" "move"
+  (dolist (tool '("insert" "replace" "replace_match" "copy" "move"
                   "undo_last_change"))
     (let ((transfer (member tool '("copy" "move"))))
       (pimacs-hashline--wrap-result-inserter

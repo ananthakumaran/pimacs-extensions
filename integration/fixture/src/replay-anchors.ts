@@ -51,7 +51,7 @@ export function recordedResults(tapePath: string): RecordedResult[] {
 const anchorFields: Record<string, string[]> = {
   replace: ["remove_from", "remove_to", "replace_from", "replace_to", "from", "to"],
   insert: ["anchor"],
-  replace_within: ["replace_from", "replace_to"],
+  replace_match: ["replace_from", "replace_to"],
   copy: ["source_from", "source_to", "insert_after"],
   move: ["source_from", "source_to", "insert_after"],
 };
