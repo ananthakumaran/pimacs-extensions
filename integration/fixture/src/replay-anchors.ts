@@ -10,7 +10,7 @@ export function anchoredRows(content: string): AnchorRow[] {
   const rows: AnchorRow[] = [];
   for (const line of content.split("\n")) {
     // Read, numbered grep, added diff and context rows are live; deletions aren't.
-    const match = /^(?:\d+\s*│\s*)?(?:[ +])?([A-Za-z0-9]{4})│(.*)$/.exec(line);
+    const match = /^(?:\s*\d+[:-]│\s*)?(?:[ +])?([a-z]{5})│(.*)$/.exec(line);
     if (match) rows.push({ anchor: match[1], content: match[2] });
   }
   return rows;
@@ -20,6 +20,7 @@ export interface RecordedResult {
   toolName: string;
   rows: AnchorRow[];
 }
+
 
 export function recordedResults(tapePath: string): RecordedResult[] {
   const tape = loadYaml(readFileSync(tapePath, "utf8")) as {
@@ -49,11 +50,11 @@ export function recordedResults(tapePath: string): RecordedResult[] {
 }
 
 const anchorFields: Record<string, string[]> = {
-  replace: ["remove_from", "remove_to", "replace_from", "replace_to", "from", "to"],
+  replace: ["remove_from", "remove_to"],
   insert: ["anchor"],
-  replace_within: ["replace_from", "replace_to"],
-  copy: ["source_from", "source_to", "insert_after"],
-  move: ["source_from", "source_to", "insert_after"],
+  replace_match: ["replace_from", "replace_to"],
+  copy: ["source_from", "source_to", "anchor"],
+  move: ["source_from", "source_to", "anchor"],
 };
 
 /** Translate per-result rows, not global content matches: duplicate lines in
@@ -73,11 +74,11 @@ export class ReplayAnchors {
     if (!expected || expected.toolName !== toolName) {
       throw new Error(`Replay tool order mismatch: expected ${expected?.toolName}, got ${toolName}`);
     }
-    this.cursor++;
     const rows = anchoredRows(output);
     if (rows.length !== expected.rows.length || rows.some((row, i) => row.content !== expected.rows[i].content)) {
-      throw new Error(`Replay anchor rows differ for ${toolName}; re-record the tape`);
+      throw new Error(`Replay anchor rows differ for ${toolName}: expected ${JSON.stringify(expected.rows.map(row => row.content))}, got ${JSON.stringify(rows.map(row => row.content))}`);
     }
+    this.cursor++;
     rows.forEach((row, i) => this.live.set(expected.rows[i].anchor, row.anchor));
   }
 

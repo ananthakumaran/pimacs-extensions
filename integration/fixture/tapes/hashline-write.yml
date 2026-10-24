@@ -33,7 +33,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -67,12 +67,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -169,7 +169,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate
@@ -812,7 +812,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -846,12 +846,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -898,9 +898,9 @@ http_interactions:
           can be added
           below.\",\"path\":\"/tmp/test1.md\"}"}}]},{"role":"tool","content":"Successfully
           wrote to /tmp/test1.md\n\n\n--- Auto-read (hashline anchors)
-          ---\nekJR│# Test File 1\nJsEd│\nroWT│This is a second test markdown
-          file.\nUsUE│\nDFjh│## Sample Content\njdES│\nOLFL│- Item 1\nwgJT│-
-          Item 2\nbpvo│- Item 3\nHErn│\noiXB│Additional content can be added
+          ---\nzaaaa│# Test File 1\nzaaab│\nzaaac│This is a second test markdown
+          file.\nzaaad│\nzaaae│## Sample Content\nzaaaf│\nzaaag│- Item 1\nzaaah│-
+          Item 2\nzaaai│- Item 3\nzaaaj│\nzaaak│Additional content can be added
           below.","tool_call_id":"call_hcf85osj"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character alphanumeric anchor, the `│` separator, then the line
@@ -966,7 +966,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate

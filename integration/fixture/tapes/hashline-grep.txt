@@ -2,9 +2,9 @@ user> Use grep tool and search for `beta` in *.txt
 
 assistant> The user wants to search for "beta" in all .txt files using the anchor_grep tool.
 
-anchor_grep /beta/ (*.txt)
+grep /beta/ (*.txt)
 === sample.txt ===
-2 │ beta
+2:│ beta
 
 assistant> The search returned beta in sample.txt.
 

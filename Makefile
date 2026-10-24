@@ -29,12 +29,21 @@ compile: cask
 typecheck:
 	cd $(FIXTURE_DIR) && npm run check
 
+.PHONY: fixture-test
+fixture-test:
+	cd $(FIXTURE_DIR) && npm test
+
+.PHONY: unit
+unit: compile typecheck fixture-test
+	@$(CASK_EMACS) -L . -l $(INTEGRATION_TESTS) \
+	  --eval "(ert-run-tests-batch-and-exit '(tag unit))"
+
 .PHONY: integration
-integration: compile typecheck
+integration: compile typecheck fixture-test
 	@test -x "$(FIXTURE_DIR)/node_modules/.bin/proxay" || \
 	  (echo "Run 'make setup' to install integration dependencies." >&2; exit 1)
 	@$(CASK_EMACS) -L . -l $(INTEGRATION_TESTS) \
-	  --eval '(ert-run-tests-batch-and-exit "$(MATCH)")'
+	  --eval '(ert-run-tests-batch-and-exit "$(MATCH)")' 2>&1
 
 .PHONY: test
 test: integration

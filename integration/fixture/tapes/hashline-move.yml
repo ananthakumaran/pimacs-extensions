@@ -31,7 +31,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -43,11 +43,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -59,12 +59,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -73,7 +73,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -130,14 +130,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -151,16 +151,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -218,10 +218,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -245,9 +245,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -260,7 +260,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -291,7 +291,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -1092,7 +1092,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -1104,11 +1104,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -1120,12 +1120,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -1134,7 +1134,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -1179,7 +1179,7 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
           then the line content. Target lines in replace and insert by anchor,
@@ -1202,14 +1202,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -1223,16 +1223,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -1290,10 +1290,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -1317,9 +1317,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -1332,7 +1332,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -1363,7 +1363,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -1465,7 +1465,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -1477,11 +1477,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -1493,12 +1493,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -1507,7 +1507,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -1552,9 +1552,9 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
           I read
-          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"ImJs│top\nqrAt│beta","tool_call_id":"call_wro3da14"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"zaaag│top\nzaaah│beta","tool_call_id":"call_wro3da14"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
           then the line content. Target lines in replace and insert by anchor,
@@ -1577,14 +1577,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -1598,16 +1598,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -1665,10 +1665,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -1692,9 +1692,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -1707,7 +1707,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -1738,7 +1738,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -8089,7 +8089,7 @@ http_interactions:
 
 
           data:
-          {"id":"chatcmpl-338","object":"chat.completion.chunk","created":1790938833,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_rbcp65tm","index":0,"type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"ImJs\",\"path\":\"sample.txt\",\"source_from\":\"cpCy\",\"source_to\":\"cpCy\"}"}}]},"finish_reason":null}]}
+          {"id":"chatcmpl-338","object":"chat.completion.chunk","created":1790938833,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_rbcp65tm","index":0,"type":"function","function":{"name":"move","arguments":"{\"path\":\"sample.txt\",\"source_from\":\"zaaae\",\"source_to\":\"zaaae\",\"anchor\":\"zaaag\",\"direction\":\"after\"}"}}]},"finish_reason":null}]}
 
 
           data:
@@ -8135,7 +8135,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -8147,11 +8147,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -8163,12 +8163,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -8177,7 +8177,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -8222,14 +8222,14 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
           I read
-          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"ImJs│top\nqrAt│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
-          have the following anchors:\n`sample.txt`:\n- GrBW - alpha\n- cpCy -
-          beta\n- SSla - gamma\n\n`destination.md`:\n- ImJs - top\n- qrAt -
+          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"zaaag│top\nzaaah│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
+          have the following anchors:\n`sample.txt`:\n- zaaad - alpha\n- zaaae -
+          beta\n- zaaaf - gamma\n\n`destination.md`:\n- zaaag - top\n- zaaah -
           beta\n\nThe user wants to move the \"beta line\" from `sample.txt`
-          (anchor `cpCy`) to after the \"top line\" in `destination.md` (anchor
-          `ImJs`).\n\n\"with path sample.txt\": The instructions for `move`
+          (anchor `zaaae`) to after the \"top line\" in `destination.md` (anchor
+          `zaaag`).\n\n\"with path sample.txt\": The instructions for `move`
           say:\n> Get `source_from`, `source_to`, and `insert_after`. The `path`
           parameter must match the anchor ownership. If source and destination
           are different files, does it work with one call?\n> \"source_from and
@@ -8250,11 +8250,11 @@ http_interactions:
           `source_from` and `source_to` as bare anchors marking the first and
           last line to move in the source file, and `insert_after` as the bare
           anchor of the destination line after which the range goes.\"\n\nIn my
-          case:\n- `source_from`: cpCy\n- `source_to`: cpCy\n- `insert_after`:
-          ImJs\n\nThe question is what `path` to provide. If I use `sample.txt`,
-          will it know where `ImJs` is? The anchors are unique and served from
+          case:\n- `source_from`: zaaae\n- `source_to`: zaaae\n- `insert_after`:
+          zaaag\n\nThe question is what `path` to provide. If I use `sample.txt`,
+          will it know where `zaaag` is? The anchors are unique and served from
           specific files in the context of the tool's state. Or does it just
-          need to be \"any\" valid path for the anchor owned? But `ImJs` doesn't
+          need to be \"any\" valid path for the anchor owned? But `zaaag` doesn't
           belong to `sample.txt`.\n\nActually, I have both served at once (by
           reading them).\nWait, if I use one call with `move`, and only one
           `path` is required... Let me look at the rule/description.\n\"If
@@ -8269,7 +8269,7 @@ http_interactions:
           or handles cross-file moves by identifying anchors from their served
           paths (which were stored when they were read).\n\nGiven I have both
           files' content and see both sets of anchors, and the prompt specifies
-          \"with path sample.txt\", maybe it wants me to use that. But `ImJs` is
+          \"with path sample.txt\", maybe it wants me to use that. But `zaaag` is
           not in `sample.txt`.\n\nActually, let's look at the tool description
           again very carefully.\n`move`: \"... Give source_from and source_to as
           bare anchors marking the first and last line to move in the source
@@ -8277,25 +8277,25 @@ http_interactions:
           after which the range goes.\"\nIt doesn't say \"the path must contain
           all anchors\". It says \"must match anchor ownership\".\n\nIf I have a
           cross-file move, maybe provide the path of the source? But `then` it
-          might not know where `ImJs`. However, I served both in their
+          might not know where `zaaag`. However, I served both in their
           respective files. If the tool manages a table of anchors to paths,
           then a single `path` might just be a fallback or something.\n\nWait,
           if `source_from`, `source_to`, and `insert_after` were all from the
           same file, `path` is essential.\nIf they are not, it's still only one
           `path` field. This implies that either:\n1. The tool knows which file
-          `ImJs` belongs to even if I only provide `sample.txt`.\n2. The
+          `zaaag` belongs to even if I only provide `sample.txt`.\n2. The
           instruction \"must match anchor ownership\" means something specific
           when cross-file moves are involved.\n\nActually, many tools like this
           use the path to identify the file for a set of anchors. If multiple
           files are involved, maybe it's special. But wait, if I can only
-          provide one `path`, and `ImJs` is in `destination.md`... and `cpCy` is
+          provide one `path`, and `zaaag` is in `destination.md`... and `zaaae` is
           in `sample.txt`.\n\nLet's re-read: \"the path must match anchor
           ownership\". This usually means that for every anchor provided
           (source_from, source_to, insert_after), it's possible to find it.\nIf
-          I provide `sample.txt`, and it tries to find `ImJs` in `sample.txt`,
+          I provide `sample.txt`, and it tries to find `zaaag` in `sample.txt`,
           it will fail if the tool isn't smart enough.\n\nHowever, standard
           behavior for these agents when they have \"served\" anchors is that
-          the anchor itself (like `ImJs`) is tied to a row which knows its own
+          the anchor itself (like `zaaag`) is tied to a row which knows its own
           path during the current turn. If I provide any valid path from the
           ones involved, maybe it works? Or perhaps since I'm told to use \"path
           sample.txt\", I should just do that.\n\nWait, let me think. If I am
@@ -8306,12 +8306,12 @@ http_interactions:
           system uses the pre-existing anchor information to find where the
           destination is.\n\nLet's try it.Actually, looking at the instructions
           \"with path sample.txt\", I will use that.\nActually, let me re-read:
-          \"use move exactly once... with path sample.txt\".\nSince `cpCy` is in
+          \"use move exactly once... with path sample.txt\".\nSince `zaaae` is in
           `sample.txt`, and the instruction explicitly gives a path, I'll use
-          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"ImJs\",\"path\":\"sample.txt\",\"source_from\":\"cpCy\",\"source_to\":\"cpCy\"}"}}]},{"role":"tool","content":"---
-          sample.txt ---\n GrBW│alpha\n-cpCy│beta\n SSla│gamma\n\n---
-          destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta","tool_call_id":"call_rbcp65tm"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"zaaag\",\"path\":\"sample.txt\",\"source_from\":\"zaaae\",\"source_to\":\"zaaae\"}"}}]},{"role":"tool","content":"---
+          sample.txt ---\n zaaad│alpha\n-zaaae│beta\n zaaaf│gamma\n\n---
+          destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta","tool_call_id":"call_rbcp65tm"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
           then the line content. Target lines in replace and insert by anchor,
@@ -8334,14 +8334,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -8355,16 +8355,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -8422,10 +8422,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -8449,9 +8449,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -8464,7 +8464,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -8495,7 +8495,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -11943,7 +11943,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -11955,11 +11955,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -11971,12 +11971,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -11985,7 +11985,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -12030,14 +12030,14 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
           I read
-          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"ImJs│top\nqrAt│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
-          have the following anchors:\n`sample.txt`:\n- GrBW - alpha\n- cpCy -
-          beta\n- SSla - gamma\n\n`destination.md`:\n- ImJs - top\n- qrAt -
+          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"zaaag│top\nzaaah│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
+          have the following anchors:\n`sample.txt`:\n- zaaad - alpha\n- zaaae -
+          beta\n- zaaaf - gamma\n\n`destination.md`:\n- zaaag - top\n- zaaah -
           beta\n\nThe user wants to move the \"beta line\" from `sample.txt`
-          (anchor `cpCy`) to after the \"top line\" in `destination.md` (anchor
-          `ImJs`).\n\n\"with path sample.txt\": The instructions for `move`
+          (anchor `zaaae`) to after the \"top line\" in `destination.md` (anchor
+          `zaaag`).\n\n\"with path sample.txt\": The instructions for `move`
           say:\n> Get `source_from`, `source_to`, and `insert_after`. The `path`
           parameter must match the anchor ownership. If source and destination
           are different files, does it work with one call?\n> \"source_from and
@@ -12058,11 +12058,11 @@ http_interactions:
           `source_from` and `source_to` as bare anchors marking the first and
           last line to move in the source file, and `insert_after` as the bare
           anchor of the destination line after which the range goes.\"\n\nIn my
-          case:\n- `source_from`: cpCy\n- `source_to`: cpCy\n- `insert_after`:
-          ImJs\n\nThe question is what `path` to provide. If I use `sample.txt`,
-          will it know where `ImJs` is? The anchors are unique and served from
+          case:\n- `source_from`: zaaae\n- `source_to`: zaaae\n- `insert_after`:
+          zaaag\n\nThe question is what `path` to provide. If I use `sample.txt`,
+          will it know where `zaaag` is? The anchors are unique and served from
           specific files in the context of the tool's state. Or does it just
-          need to be \"any\" valid path for the anchor owned? But `ImJs` doesn't
+          need to be \"any\" valid path for the anchor owned? But `zaaag` doesn't
           belong to `sample.txt`.\n\nActually, I have both served at once (by
           reading them).\nWait, if I use one call with `move`, and only one
           `path` is required... Let me look at the rule/description.\n\"If
@@ -12077,7 +12077,7 @@ http_interactions:
           or handles cross-file moves by identifying anchors from their served
           paths (which were stored when they were read).\n\nGiven I have both
           files' content and see both sets of anchors, and the prompt specifies
-          \"with path sample.txt\", maybe it wants me to use that. But `ImJs` is
+          \"with path sample.txt\", maybe it wants me to use that. But `zaaag` is
           not in `sample.txt`.\n\nActually, let's look at the tool description
           again very carefully.\n`move`: \"... Give source_from and source_to as
           bare anchors marking the first and last line to move in the source
@@ -12085,25 +12085,25 @@ http_interactions:
           after which the range goes.\"\nIt doesn't say \"the path must contain
           all anchors\". It says \"must match anchor ownership\".\n\nIf I have a
           cross-file move, maybe provide the path of the source? But `then` it
-          might not know where `ImJs`. However, I served both in their
+          might not know where `zaaag`. However, I served both in their
           respective files. If the tool manages a table of anchors to paths,
           then a single `path` might just be a fallback or something.\n\nWait,
           if `source_from`, `source_to`, and `insert_after` were all from the
           same file, `path` is essential.\nIf they are not, it's still only one
           `path` field. This implies that either:\n1. The tool knows which file
-          `ImJs` belongs to even if I only provide `sample.txt`.\n2. The
+          `zaaag` belongs to even if I only provide `sample.txt`.\n2. The
           instruction \"must match anchor ownership\" means something specific
           when cross-file moves are involved.\n\nActually, many tools like this
           use the path to identify the file for a set of anchors. If multiple
           files are involved, maybe it's special. But wait, if I can only
-          provide one `path`, and `ImJs` is in `destination.md`... and `cpCy` is
+          provide one `path`, and `zaaag` is in `destination.md`... and `zaaae` is
           in `sample.txt`.\n\nLet's re-read: \"the path must match anchor
           ownership\". This usually means that for every anchor provided
           (source_from, source_to, insert_after), it's possible to find it.\nIf
-          I provide `sample.txt`, and it tries to find `ImJs` in `sample.txt`,
+          I provide `sample.txt`, and it tries to find `zaaag` in `sample.txt`,
           it will fail if the tool isn't smart enough.\n\nHowever, standard
           behavior for these agents when they have \"served\" anchors is that
-          the anchor itself (like `ImJs`) is tied to a row which knows its own
+          the anchor itself (like `zaaag`) is tied to a row which knows its own
           path during the current turn. If I provide any valid path from the
           ones involved, maybe it works? Or perhaps since I'm told to use \"path
           sample.txt\", I should just do that.\n\nWait, let me think. If I am
@@ -12114,54 +12114,54 @@ http_interactions:
           system uses the pre-existing anchor information to find where the
           destination is.\n\nLet's try it.Actually, looking at the instructions
           \"with path sample.txt\", I will use that.\nActually, let me re-read:
-          \"use move exactly once... with path sample.txt\".\nSince `cpCy` is in
+          \"use move exactly once... with path sample.txt\".\nSince `zaaae` is in
           `sample.txt`, and the instruction explicitly gives a path, I'll use
-          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"ImJs\",\"path\":\"sample.txt\",\"source_from\":\"cpCy\",\"source_to\":\"cpCy\"}"}}]},{"role":"tool","content":"---
-          sample.txt ---\n GrBW│alpha\n-cpCy│beta\n SSla│gamma\n\n---
-          destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
+          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"zaaag\",\"path\":\"sample.txt\",\"source_from\":\"zaaae\",\"source_to\":\"zaaae\"}"}}]},{"role":"tool","content":"---
+          sample.txt ---\n zaaad│alpha\n-zaaae│beta\n zaaaf│gamma\n\n---
+          destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
           move was successfully performed from `sample.txt` to
           `destination.md`.\n\n```json\n{\n  \"action\": \"move\",\n  \"path\":
-          \"sample.txt\",\n  \"source_from\": \"cpCy\",\n  \"source_to\":
-          \"cpCy\",\n  \"insert_after\": \"ImJs\"\n}\n```","reasoning":"Wait, I
+          \"sample.txt\",\n  \"source_from\": \"zaaae\",\n  \"source_to\":
+          \"zaaae\",\n  \"insert_after\": \"zaaag\"\n}\n```","reasoning":"Wait, I
           see something interesting in the output.\nIn `destination.md`, it
-          seems to have inserted a new line between `ImJs` and `qrAt`.\nHowever,
-          wait:\n```\n--- destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta\n```\nThe original was:\n```\nImJs│top\nqrAt│beta\n```\nAnd
-          the move of `cpCy│beta` from `sample.txt` resulted in a new line
-          `PHkg│beta`.\nWait, why did it become `PHkg`? Oh, because the anchor
+          seems to have inserted a new line between `zaaag` and `zaaah`.\nHowever,
+          wait:\n```\n--- destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta\n```\nThe original was:\n```\nzaaag│top\nzaaah│beta\n```\nAnd
+          the move of `zaaae│beta` from `sample.txt` resulted in a new line
+          `zaaai│beta`.\nWait, why did it become `zaaai`? Oh, because the anchor
           changed as expected when moving to a new file/location (or just a
           fresh hit).\n\nBut wait, there are TWO beta lines in `destination.md`
-          now.\n1. The newly moved one: `PHkg│beta`\n2. The original one:
-          `qrAt│beta`\n\nWait, I read `destination.md`
-          earlier:\n```\nImJs│top\nqrAt│beta\n```\nIt only had 2 lines. Now it
+          now.\n1. The newly moved one: `zaaai│beta`\n2. The original one:
+          `zaaah│beta`\n\nWait, I read `destination.md`
+          earlier:\n```\nzaaag│top\nzaaah│beta\n```\nIt only had 2 lines. Now it
           has 3? Let me re-read my first `read` of `destination.md`.\n100% sure
           it was \"top\" and then \"beta\".\n\nAh, I see what happened. The
-          original `qrAt│beta` is still there. My move just inserted the one
+          original `zaaah│beta` is still there. My move just inserted the one
           from `sample.txt`.\nThe prompt didn't say to remove the old one in
           `destination.md`, but typically a \"move\" of a concept like \"the
           beta line\" might mean replacing it? No, it says \"move the beta line
           from sample.txt after the top line in destination.md\". It doesn't
           mention anything about content in `destination_md`.\n\nHowever,
           looking at the result:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nThere are now two beta lines.
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nThere are now two beta lines.
           This might be intended if the prompt just said \"move\".\n\nActually,
           let me check my `read` of `destination.md`.\nIt
-          was:\nImJs│top\nqrAt│beta\n\nThe user asked to move the beta line from
+          was:\nzaaag│top\nzaaah│beta\n\nThe user asked to move the beta line from
           sample_txt after top in destination_md.\nI did exactly that. I didn't
           say anything about removing the old \"beta\" in
           `destination.md`.\n\nWait, if there were two-ish lines? No, it was
           100% just those two.\n\nLet me double check the prompt.\n\"Use move
           exactly once to move the beta line from sample.txt after the top line
           in destination.md, with path sample.txt.\"\n\nI did that. I didn't do
-          anything else. The question is whether `qrAt│beta` being still there
+          anything else. The question is whether `zaaah│beta` being still there
           is an issue. The user didn't ask to remove it.\n\nWait, wait. Why does
           `destination.md` have two \"beta\" lines
-          now?\nOriginal:\nImJs│top\nqrAt│beta\n\nI moved beta from sample.txt
-          (cpCy) and put it after ImJs.\nSo it should be:\nImJs│top\n[Moved
-          Beta]\nqrAt│beta\n\nThis is what happened.\n\nWait, I just noticed
+          now?\nOriginal:\nzaaag│top\nzaaah│beta\n\nI moved beta from sample.txt
+          (zaaae) and put it after zaaag.\nSo it should be:\nzaaag│top\n[Moved
+          Beta]\nzaaah│beta\n\nThis is what happened.\n\nWait, I just noticed
           something in the output of `move`:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nIt seems like it worked as
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nIt seems like it worked as
           requested.\n\nI'll stop here as I finished without undoing or reading
           again."},{"role":"user","content":[{"type":"text","text":"Now undo the
           cross-file move completely with undo_last_change on both sample.txt
@@ -12189,14 +12189,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -12210,16 +12210,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -12277,10 +12277,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -12304,9 +12304,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -12319,7 +12319,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -12350,7 +12350,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -12801,7 +12801,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -12813,11 +12813,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -12829,12 +12829,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -12843,7 +12843,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -12888,14 +12888,14 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
           I read
-          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"ImJs│top\nqrAt│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
-          have the following anchors:\n`sample.txt`:\n- GrBW - alpha\n- cpCy -
-          beta\n- SSla - gamma\n\n`destination.md`:\n- ImJs - top\n- qrAt -
+          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"zaaag│top\nzaaah│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
+          have the following anchors:\n`sample.txt`:\n- zaaad - alpha\n- zaaae -
+          beta\n- zaaaf - gamma\n\n`destination.md`:\n- zaaag - top\n- zaaah -
           beta\n\nThe user wants to move the \"beta line\" from `sample.txt`
-          (anchor `cpCy`) to after the \"top line\" in `destination.md` (anchor
-          `ImJs`).\n\n\"with path sample.txt\": The instructions for `move`
+          (anchor `zaaae`) to after the \"top line\" in `destination.md` (anchor
+          `zaaag`).\n\n\"with path sample.txt\": The instructions for `move`
           say:\n> Get `source_from`, `source_to`, and `insert_after`. The `path`
           parameter must match the anchor ownership. If source and destination
           are different files, does it work with one call?\n> \"source_from and
@@ -12916,11 +12916,11 @@ http_interactions:
           `source_from` and `source_to` as bare anchors marking the first and
           last line to move in the source file, and `insert_after` as the bare
           anchor of the destination line after which the range goes.\"\n\nIn my
-          case:\n- `source_from`: cpCy\n- `source_to`: cpCy\n- `insert_after`:
-          ImJs\n\nThe question is what `path` to provide. If I use `sample.txt`,
-          will it know where `ImJs` is? The anchors are unique and served from
+          case:\n- `source_from`: zaaae\n- `source_to`: zaaae\n- `insert_after`:
+          zaaag\n\nThe question is what `path` to provide. If I use `sample.txt`,
+          will it know where `zaaag` is? The anchors are unique and served from
           specific files in the context of the tool's state. Or does it just
-          need to be \"any\" valid path for the anchor owned? But `ImJs` doesn't
+          need to be \"any\" valid path for the anchor owned? But `zaaag` doesn't
           belong to `sample.txt`.\n\nActually, I have both served at once (by
           reading them).\nWait, if I use one call with `move`, and only one
           `path` is required... Let me look at the rule/description.\n\"If
@@ -12935,7 +12935,7 @@ http_interactions:
           or handles cross-file moves by identifying anchors from their served
           paths (which were stored when they were read).\n\nGiven I have both
           files' content and see both sets of anchors, and the prompt specifies
-          \"with path sample.txt\", maybe it wants me to use that. But `ImJs` is
+          \"with path sample.txt\", maybe it wants me to use that. But `zaaag` is
           not in `sample.txt`.\n\nActually, let's look at the tool description
           again very carefully.\n`move`: \"... Give source_from and source_to as
           bare anchors marking the first and last line to move in the source
@@ -12943,25 +12943,25 @@ http_interactions:
           after which the range goes.\"\nIt doesn't say \"the path must contain
           all anchors\". It says \"must match anchor ownership\".\n\nIf I have a
           cross-file move, maybe provide the path of the source? But `then` it
-          might not know where `ImJs`. However, I served both in their
+          might not know where `zaaag`. However, I served both in their
           respective files. If the tool manages a table of anchors to paths,
           then a single `path` might just be a fallback or something.\n\nWait,
           if `source_from`, `source_to`, and `insert_after` were all from the
           same file, `path` is essential.\nIf they are not, it's still only one
           `path` field. This implies that either:\n1. The tool knows which file
-          `ImJs` belongs to even if I only provide `sample.txt`.\n2. The
+          `zaaag` belongs to even if I only provide `sample.txt`.\n2. The
           instruction \"must match anchor ownership\" means something specific
           when cross-file moves are involved.\n\nActually, many tools like this
           use the path to identify the file for a set of anchors. If multiple
           files are involved, maybe it's special. But wait, if I can only
-          provide one `path`, and `ImJs` is in `destination.md`... and `cpCy` is
+          provide one `path`, and `zaaag` is in `destination.md`... and `zaaae` is
           in `sample.txt`.\n\nLet's re-read: \"the path must match anchor
           ownership\". This usually means that for every anchor provided
           (source_from, source_to, insert_after), it's possible to find it.\nIf
-          I provide `sample.txt`, and it tries to find `ImJs` in `sample.txt`,
+          I provide `sample.txt`, and it tries to find `zaaag` in `sample.txt`,
           it will fail if the tool isn't smart enough.\n\nHowever, standard
           behavior for these agents when they have \"served\" anchors is that
-          the anchor itself (like `ImJs`) is tied to a row which knows its own
+          the anchor itself (like `zaaag`) is tied to a row which knows its own
           path during the current turn. If I provide any valid path from the
           ones involved, maybe it works? Or perhaps since I'm told to use \"path
           sample.txt\", I should just do that.\n\nWait, let me think. If I am
@@ -12972,54 +12972,54 @@ http_interactions:
           system uses the pre-existing anchor information to find where the
           destination is.\n\nLet's try it.Actually, looking at the instructions
           \"with path sample.txt\", I will use that.\nActually, let me re-read:
-          \"use move exactly once... with path sample.txt\".\nSince `cpCy` is in
+          \"use move exactly once... with path sample.txt\".\nSince `zaaae` is in
           `sample.txt`, and the instruction explicitly gives a path, I'll use
-          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"ImJs\",\"path\":\"sample.txt\",\"source_from\":\"cpCy\",\"source_to\":\"cpCy\"}"}}]},{"role":"tool","content":"---
-          sample.txt ---\n GrBW│alpha\n-cpCy│beta\n SSla│gamma\n\n---
-          destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
+          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"zaaag\",\"path\":\"sample.txt\",\"source_from\":\"zaaae\",\"source_to\":\"zaaae\"}"}}]},{"role":"tool","content":"---
+          sample.txt ---\n zaaad│alpha\n-zaaae│beta\n zaaaf│gamma\n\n---
+          destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
           move was successfully performed from `sample.txt` to
           `destination.md`.\n\n```json\n{\n  \"action\": \"move\",\n  \"path\":
-          \"sample.txt\",\n  \"source_from\": \"cpCy\",\n  \"source_to\":
-          \"cpCy\",\n  \"insert_after\": \"ImJs\"\n}\n```","reasoning":"Wait, I
+          \"sample.txt\",\n  \"source_from\": \"zaaae\",\n  \"source_to\":
+          \"zaaae\",\n  \"insert_after\": \"zaaag\"\n}\n```","reasoning":"Wait, I
           see something interesting in the output.\nIn `destination.md`, it
-          seems to have inserted a new line between `ImJs` and `qrAt`.\nHowever,
-          wait:\n```\n--- destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta\n```\nThe original was:\n```\nImJs│top\nqrAt│beta\n```\nAnd
-          the move of `cpCy│beta` from `sample.txt` resulted in a new line
-          `PHkg│beta`.\nWait, why did it become `PHkg`? Oh, because the anchor
+          seems to have inserted a new line between `zaaag` and `zaaah`.\nHowever,
+          wait:\n```\n--- destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta\n```\nThe original was:\n```\nzaaag│top\nzaaah│beta\n```\nAnd
+          the move of `zaaae│beta` from `sample.txt` resulted in a new line
+          `zaaai│beta`.\nWait, why did it become `zaaai`? Oh, because the anchor
           changed as expected when moving to a new file/location (or just a
           fresh hit).\n\nBut wait, there are TWO beta lines in `destination.md`
-          now.\n1. The newly moved one: `PHkg│beta`\n2. The original one:
-          `qrAt│beta`\n\nWait, I read `destination.md`
-          earlier:\n```\nImJs│top\nqrAt│beta\n```\nIt only had 2 lines. Now it
+          now.\n1. The newly moved one: `zaaai│beta`\n2. The original one:
+          `zaaah│beta`\n\nWait, I read `destination.md`
+          earlier:\n```\nzaaag│top\nzaaah│beta\n```\nIt only had 2 lines. Now it
           has 3? Let me re-read my first `read` of `destination.md`.\n100% sure
           it was \"top\" and then \"beta\".\n\nAh, I see what happened. The
-          original `qrAt│beta` is still there. My move just inserted the one
+          original `zaaah│beta` is still there. My move just inserted the one
           from `sample.txt`.\nThe prompt didn't say to remove the old one in
           `destination.md`, but typically a \"move\" of a concept like \"the
           beta line\" might mean replacing it? No, it says \"move the beta line
           from sample.txt after the top line in destination.md\". It doesn't
           mention anything about content in `destination_md`.\n\nHowever,
           looking at the result:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nThere are now two beta lines.
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nThere are now two beta lines.
           This might be intended if the prompt just said \"move\".\n\nActually,
           let me check my `read` of `destination.md`.\nIt
-          was:\nImJs│top\nqrAt│beta\n\nThe user asked to move the beta line from
+          was:\nzaaag│top\nzaaah│beta\n\nThe user asked to move the beta line from
           sample_txt after top in destination_md.\nI did exactly that. I didn't
           say anything about removing the old \"beta\" in
           `destination.md`.\n\nWait, if there were two-ish lines? No, it was
           100% just those two.\n\nLet me double check the prompt.\n\"Use move
           exactly once to move the beta line from sample.txt after the top line
           in destination.md, with path sample.txt.\"\n\nI did that. I didn't do
-          anything else. The question is whether `qrAt│beta` being still there
+          anything else. The question is whether `zaaah│beta` being still there
           is an issue. The user didn't ask to remove it.\n\nWait, wait. Why does
           `destination.md` have two \"beta\" lines
-          now?\nOriginal:\nImJs│top\nqrAt│beta\n\nI moved beta from sample.txt
-          (cpCy) and put it after ImJs.\nSo it should be:\nImJs│top\n[Moved
-          Beta]\nqrAt│beta\n\nThis is what happened.\n\nWait, I just noticed
+          now?\nOriginal:\nzaaag│top\nzaaah│beta\n\nI moved beta from sample.txt
+          (zaaae) and put it after zaaag.\nSo it should be:\nzaaag│top\n[Moved
+          Beta]\nzaaah│beta\n\nThis is what happened.\n\nWait, I just noticed
           something in the output of `move`:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nIt seems like it worked as
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nIt seems like it worked as
           requested.\n\nI'll stop here as I finished without undoing or reading
           again."},{"role":"user","content":[{"type":"text","text":"Now undo the
           cross-file move completely with undo_last_change on both sample.txt
@@ -13031,8 +13031,8 @@ http_interactions:
           for both `sample.txt` and `destination.md`.\n\n1.  Undo on
           `sample.txt`.\n2.  Undo on
           `destination.md`.","tool_calls":[{"id":"call_l28jrvu5","type":"function","function":{"name":"undo_last_change","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"
-          GrBW│alpha\n+cpCy│beta\n
-          SSla│gamma","tool_call_id":"call_l28jrvu5"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          zaaad│alpha\n+zaaae│beta\n
+          zaaaf│gamma","tool_call_id":"call_l28jrvu5"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
           then the line content. Target lines in replace and insert by anchor,
@@ -13055,14 +13055,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -13076,16 +13076,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -13143,10 +13143,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -13170,9 +13170,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -13185,7 +13185,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -13216,7 +13216,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is
@@ -13352,7 +13352,7 @@ http_interactions:
           line returned as anchor│content\n- replace: Replace lines by anchor:
           bare anchors in `remove_from`/`remove_to`, the exact replacement text
           in `replacement_lines` (one edit per call); include `path`
-          (required)\n- replace_within: Replace part of a line or range by
+          (required)\n- replace_match: Replace part of a line or range by
           anchor: `replace_old` is matched exactly once inside
           `replace_from`/`replace_to` and replaced by `replace_new`, leaving the
           rest of the text untouched; include `path` (required)\n- insert:
@@ -13364,11 +13364,11 @@ http_interactions:
           (required)\n- move: Move lines to another position by anchor:
           `source_from`/`source_to` mark the range, it lands after
           `insert_after`; the anchors resolve both files; include `path`
-          (required)\n- anchor_grep: Search with `lineNumber │ anchor│content`
+          (required)\n- grep: Search with `lineNumber │ anchor│content`
           hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Single-level undo: reverts a file's last `replace`,
-          `replace_within`, `insert`, `copy`, or `move`\n\nIn addition to the
+          `replace_match`, `insert`, `copy`, or `move`\n\nIn addition to the
           tools above, you may have access to other custom tools depending on
           the project.\n</tools>\n\n<rules>\n- `read`: call again after an edit
           when you need anchors you lack — post-edit diff `+anchor│`/` anchor│`
@@ -13380,12 +13380,12 @@ http_interactions:
           whose anchors resolve nowhere fails alone.\n- `replace`:
           `replacement_lines` is one string; a pasted `anchor│` prefix is
           stripped; single line: same anchor for `remove_from` and
-          `remove_to`.\n- `replace_within`: use it instead of `replace` to
+          `remove_to`.\n- `replace_match`: use it instead of `replace` to
           change part of a line, so every character the request does not name is
-          preserved as served.\n- `replace_within`: `replace_old` must be copied
+          preserved as served.\n- `replace_match`: `replace_old` must be copied
           exactly from the served row and occur once in the range; a missing or
           repeated match is refused and returns the current rows.\n-
-          `replace_within`: a batch never groups it; it commits on its own, like
+          `replace_match`: a batch never groups it; it commits on its own, like
           `copy` and `move`.\n- `insert`: after inserting a quoted payload,
           check the post-edit diff for an extra `+anchor│` blank row before the
           next line.\n- `copy`: the same anchor in `source_from` and `source_to`
@@ -13394,7 +13394,7 @@ http_interactions:
           one undo entry per file — undo both sides. Lines between source and
           target may be re-anchored.\n- Use write only for new files or complete
           rewrites.\n- `undo_last_change`: only the last
-          `replace`/`replace_within`/`insert`/`copy`/`move` per file is
+          `replace`/`replace_match`/`insert`/`copy`/`move` per file is
           undoable; a `write` clears it, so undo right after a bad diff — review
           the diff's `-anchor│` rows first to confirm what you're restoring.\n-
           `undo_last_change`: a cross-file `move` records one undo entry per
@@ -13439,14 +13439,14 @@ http_interactions:
           expects me to provide that or something else. Actually, if both source
           and destination are in different files, `move` handles it.\n\nLet's
           start by reading the
-          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"GrBW│alpha\ncpCy│beta\nSSla│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
+          files.","tool_calls":[{"id":"call_udm4gqdh","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaad│alpha\nzaaae│beta\nzaaaf│gamma","tool_call_id":"call_udm4gqdh"},{"role":"assistant","content":null,"reasoning":"Now
           I read
-          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"ImJs│top\nqrAt│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
-          have the following anchors:\n`sample.txt`:\n- GrBW - alpha\n- cpCy -
-          beta\n- SSla - gamma\n\n`destination.md`:\n- ImJs - top\n- qrAt -
+          `destination.md`.","tool_calls":[{"id":"call_wro3da14","type":"function","function":{"name":"read","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"zaaag│top\nzaaah│beta","tool_call_id":"call_wro3da14"},{"role":"assistant","content":null,"reasoning":"I
+          have the following anchors:\n`sample.txt`:\n- zaaad - alpha\n- zaaae -
+          beta\n- zaaaf - gamma\n\n`destination.md`:\n- zaaag - top\n- zaaah -
           beta\n\nThe user wants to move the \"beta line\" from `sample.txt`
-          (anchor `cpCy`) to after the \"top line\" in `destination.md` (anchor
-          `ImJs`).\n\n\"with path sample.txt\": The instructions for `move`
+          (anchor `zaaae`) to after the \"top line\" in `destination.md` (anchor
+          `zaaag`).\n\n\"with path sample.txt\": The instructions for `move`
           say:\n> Get `source_from`, `source_to`, and `insert_after`. The `path`
           parameter must match the anchor ownership. If source and destination
           are different files, does it work with one call?\n> \"source_from and
@@ -13467,11 +13467,11 @@ http_interactions:
           `source_from` and `source_to` as bare anchors marking the first and
           last line to move in the source file, and `insert_after` as the bare
           anchor of the destination line after which the range goes.\"\n\nIn my
-          case:\n- `source_from`: cpCy\n- `source_to`: cpCy\n- `insert_after`:
-          ImJs\n\nThe question is what `path` to provide. If I use `sample.txt`,
-          will it know where `ImJs` is? The anchors are unique and served from
+          case:\n- `source_from`: zaaae\n- `source_to`: zaaae\n- `insert_after`:
+          zaaag\n\nThe question is what `path` to provide. If I use `sample.txt`,
+          will it know where `zaaag` is? The anchors are unique and served from
           specific files in the context of the tool's state. Or does it just
-          need to be \"any\" valid path for the anchor owned? But `ImJs` doesn't
+          need to be \"any\" valid path for the anchor owned? But `zaaag` doesn't
           belong to `sample.txt`.\n\nActually, I have both served at once (by
           reading them).\nWait, if I use one call with `move`, and only one
           `path` is required... Let me look at the rule/description.\n\"If
@@ -13486,7 +13486,7 @@ http_interactions:
           or handles cross-file moves by identifying anchors from their served
           paths (which were stored when they were read).\n\nGiven I have both
           files' content and see both sets of anchors, and the prompt specifies
-          \"with path sample.txt\", maybe it wants me to use that. But `ImJs` is
+          \"with path sample.txt\", maybe it wants me to use that. But `zaaag` is
           not in `sample.txt`.\n\nActually, let's look at the tool description
           again very carefully.\n`move`: \"... Give source_from and source_to as
           bare anchors marking the first and last line to move in the source
@@ -13494,25 +13494,25 @@ http_interactions:
           after which the range goes.\"\nIt doesn't say \"the path must contain
           all anchors\". It says \"must match anchor ownership\".\n\nIf I have a
           cross-file move, maybe provide the path of the source? But `then` it
-          might not know where `ImJs`. However, I served both in their
+          might not know where `zaaag`. However, I served both in their
           respective files. If the tool manages a table of anchors to paths,
           then a single `path` might just be a fallback or something.\n\nWait,
           if `source_from`, `source_to`, and `insert_after` were all from the
           same file, `path` is essential.\nIf they are not, it's still only one
           `path` field. This implies that either:\n1. The tool knows which file
-          `ImJs` belongs to even if I only provide `sample.txt`.\n2. The
+          `zaaag` belongs to even if I only provide `sample.txt`.\n2. The
           instruction \"must match anchor ownership\" means something specific
           when cross-file moves are involved.\n\nActually, many tools like this
           use the path to identify the file for a set of anchors. If multiple
           files are involved, maybe it's special. But wait, if I can only
-          provide one `path`, and `ImJs` is in `destination.md`... and `cpCy` is
+          provide one `path`, and `zaaag` is in `destination.md`... and `zaaae` is
           in `sample.txt`.\n\nLet's re-read: \"the path must match anchor
           ownership\". This usually means that for every anchor provided
           (source_from, source_to, insert_after), it's possible to find it.\nIf
-          I provide `sample.txt`, and it tries to find `ImJs` in `sample.txt`,
+          I provide `sample.txt`, and it tries to find `zaaag` in `sample.txt`,
           it will fail if the tool isn't smart enough.\n\nHowever, standard
           behavior for these agents when they have \"served\" anchors is that
-          the anchor itself (like `ImJs`) is tied to a row which knows its own
+          the anchor itself (like `zaaag`) is tied to a row which knows its own
           path during the current turn. If I provide any valid path from the
           ones involved, maybe it works? Or perhaps since I'm told to use \"path
           sample.txt\", I should just do that.\n\nWait, let me think. If I am
@@ -13523,54 +13523,54 @@ http_interactions:
           system uses the pre-existing anchor information to find where the
           destination is.\n\nLet's try it.Actually, looking at the instructions
           \"with path sample.txt\", I will use that.\nActually, let me re-read:
-          \"use move exactly once... with path sample.txt\".\nSince `cpCy` is in
+          \"use move exactly once... with path sample.txt\".\nSince `zaaae` is in
           `sample.txt`, and the instruction explicitly gives a path, I'll use
-          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"ImJs\",\"path\":\"sample.txt\",\"source_from\":\"cpCy\",\"source_to\":\"cpCy\"}"}}]},{"role":"tool","content":"---
-          sample.txt ---\n GrBW│alpha\n-cpCy│beta\n SSla│gamma\n\n---
-          destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
+          it.","tool_calls":[{"id":"call_rbcp65tm","type":"function","function":{"name":"move","arguments":"{\"insert_after\":\"zaaag\",\"path\":\"sample.txt\",\"source_from\":\"zaaae\",\"source_to\":\"zaaae\"}"}}]},{"role":"tool","content":"---
+          sample.txt ---\n zaaad│alpha\n-zaaae│beta\n zaaaf│gamma\n\n---
+          destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta","tool_call_id":"call_rbcp65tm"},{"role":"assistant","content":"The
           move was successfully performed from `sample.txt` to
           `destination.md`.\n\n```json\n{\n  \"action\": \"move\",\n  \"path\":
-          \"sample.txt\",\n  \"source_from\": \"cpCy\",\n  \"source_to\":
-          \"cpCy\",\n  \"insert_after\": \"ImJs\"\n}\n```","reasoning":"Wait, I
+          \"sample.txt\",\n  \"source_from\": \"zaaae\",\n  \"source_to\":
+          \"zaaae\",\n  \"insert_after\": \"zaaag\"\n}\n```","reasoning":"Wait, I
           see something interesting in the output.\nIn `destination.md`, it
-          seems to have inserted a new line between `ImJs` and `qrAt`.\nHowever,
-          wait:\n```\n--- destination.md ---\n ImJs│top\n+PHkg│beta\n
-          qrAt│beta\n```\nThe original was:\n```\nImJs│top\nqrAt│beta\n```\nAnd
-          the move of `cpCy│beta` from `sample.txt` resulted in a new line
-          `PHkg│beta`.\nWait, why did it become `PHkg`? Oh, because the anchor
+          seems to have inserted a new line between `zaaag` and `zaaah`.\nHowever,
+          wait:\n```\n--- destination.md ---\n zaaag│top\n+zaaai│beta\n
+          zaaah│beta\n```\nThe original was:\n```\nzaaag│top\nzaaah│beta\n```\nAnd
+          the move of `zaaae│beta` from `sample.txt` resulted in a new line
+          `zaaai│beta`.\nWait, why did it become `zaaai`? Oh, because the anchor
           changed as expected when moving to a new file/location (or just a
           fresh hit).\n\nBut wait, there are TWO beta lines in `destination.md`
-          now.\n1. The newly moved one: `PHkg│beta`\n2. The original one:
-          `qrAt│beta`\n\nWait, I read `destination.md`
-          earlier:\n```\nImJs│top\nqrAt│beta\n```\nIt only had 2 lines. Now it
+          now.\n1. The newly moved one: `zaaai│beta`\n2. The original one:
+          `zaaah│beta`\n\nWait, I read `destination.md`
+          earlier:\n```\nzaaag│top\nzaaah│beta\n```\nIt only had 2 lines. Now it
           has 3? Let me re-read my first `read` of `destination.md`.\n100% sure
           it was \"top\" and then \"beta\".\n\nAh, I see what happened. The
-          original `qrAt│beta` is still there. My move just inserted the one
+          original `zaaah│beta` is still there. My move just inserted the one
           from `sample.txt`.\nThe prompt didn't say to remove the old one in
           `destination.md`, but typically a \"move\" of a concept like \"the
           beta line\" might mean replacing it? No, it says \"move the beta line
           from sample.txt after the top line in destination.md\". It doesn't
           mention anything about content in `destination_md`.\n\nHowever,
           looking at the result:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nThere are now two beta lines.
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nThere are now two beta lines.
           This might be intended if the prompt just said \"move\".\n\nActually,
           let me check my `read` of `destination.md`.\nIt
-          was:\nImJs│top\nqrAt│beta\n\nThe user asked to move the beta line from
+          was:\nzaaag│top\nzaaah│beta\n\nThe user asked to move the beta line from
           sample_txt after top in destination_md.\nI did exactly that. I didn't
           say anything about removing the old \"beta\" in
           `destination.md`.\n\nWait, if there were two-ish lines? No, it was
           100% just those two.\n\nLet me double check the prompt.\n\"Use move
           exactly once to move the beta line from sample.txt after the top line
           in destination.md, with path sample.txt.\"\n\nI did that. I didn't do
-          anything else. The question is whether `qrAt│beta` being still there
+          anything else. The question is whether `zaaah│beta` being still there
           is an issue. The user didn't ask to remove it.\n\nWait, wait. Why does
           `destination.md` have two \"beta\" lines
-          now?\nOriginal:\nImJs│top\nqrAt│beta\n\nI moved beta from sample.txt
-          (cpCy) and put it after ImJs.\nSo it should be:\nImJs│top\n[Moved
-          Beta]\nqrAt│beta\n\nThis is what happened.\n\nWait, I just noticed
+          now?\nOriginal:\nzaaag│top\nzaaah│beta\n\nI moved beta from sample.txt
+          (zaaae) and put it after zaaag.\nSo it should be:\nzaaag│top\n[Moved
+          Beta]\nzaaah│beta\n\nThis is what happened.\n\nWait, I just noticed
           something in the output of `move`:\n```\n--- destination.md ---\n
-          ImJs│top\n+PHkg│beta\n qrAt│beta\n```\nIt seems like it worked as
+          zaaag│top\n+zaaai│beta\n zaaah│beta\n```\nIt seems like it worked as
           requested.\n\nI'll stop here as I finished without undoing or reading
           again."},{"role":"user","content":[{"type":"text","text":"Now undo the
           cross-file move completely with undo_last_change on both sample.txt
@@ -13582,12 +13582,12 @@ http_interactions:
           for both `sample.txt` and `destination.md`.\n\n1.  Undo on
           `sample.txt`.\n2.  Undo on
           `destination.md`.","tool_calls":[{"id":"call_l28jrvu5","type":"function","function":{"name":"undo_last_change","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"
-          GrBW│alpha\n+cpCy│beta\n
-          SSla│gamma","tool_call_id":"call_l28jrvu5"},{"role":"assistant","content":null,"reasoning":"Now
+          zaaad│alpha\n+zaaae│beta\n
+          zaaaf│gamma","tool_call_id":"call_l28jrvu5"},{"role":"assistant","content":null,"reasoning":"Now
           undoing the second part of the move on
           `destination.md`.","tool_calls":[{"id":"call_duq1i8bt","type":"function","function":{"name":"undo_last_change","arguments":"{\"path\":\"destination.md\"}"}}]},{"role":"tool","content":"
-          ImJs│top\n-PHkg│beta\n
-          qrAt│beta","tool_call_id":"call_duq1i8bt"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          zaaag│top\n-zaaai│beta\n
+          zaaah│beta","tool_call_id":"call_duq1i8bt"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character anchor (letters only, case-sensitive), the `│` separator,
           then the line content. Target lines in replace and insert by anchor,
@@ -13610,14 +13610,14 @@ http_interactions:
           decode once — `\\uXXXX` is the character, `\\\\uXXXX` the literal
           text. The text is written exactly as given, and nothing else in the
           file changes.\nTo change only part of a line without retyping the
-          rest, use `replace_within` instead; it preserves every character the
+          rest, use `replace_match` instead; it preserves every character the
           request does not name.\n\nSame-file calls in one message batch:
           earlier calls reply `In batch N` and the last call shows the combined
           diff, with one undo for the whole batch.\n\nExample: read served
-          `Hasu│old` and `arvm│old2`. Call { \"remove_from\": \"Hasu\",
-          \"remove_to\": \"arvm\", \"replacement_lines\": \"new line 1\\nnew
-          line 2\" }. The post-edit diff shows `-Hasu│old`, `-arvm│old2`,
-          `+Qwer│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
+          `zaaaa│old` and `zaaab│old2`. Call { \"remove_from\": \"zaaaa\",
+          \"remove_to\": \"zaaab\", \"replacement_lines\": \"new line 1\\nnew
+          line 2\" }. The post-edit diff shows `-zaaaa│old`, `-zaaab│old2`,
+          `+zaaac│new line 1`: the `-` rows are dead anchors now; the `+` and ` `
           rows are live anchors for the next edit. Also give `path` matching the
           file the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","remove_from","remove_to","replacement_lines"],"properties":{"path":{"type":"string","description":"Path
@@ -13631,16 +13631,16 @@ http_interactions:
           exact text to write in place of the removed range. \"\" deletes the
           range, \"\\n\" is one blank line, and a trailing line break sets the
           last line's ending instead of adding a blank
-          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_within","description":"Replace
+          line."}},"additionalProperties":true}}},{"type":"function","function":{"name":"replace_match","description":"Replace
           part of a line (or a range of lines) without retyping the rest.
           `replace_from` and `replace_to` are bare anchors from served
           `anchor│content` rows marking the first and last line of the range;
           use the same anchor for one line. `replace_old` is the exact text to
           find inside that range, copied from the served row; it must occur
           exactly once. `replace_new` replaces just that match, and every other
-          character stays untouched.\n\nExample: read served `Hasu│    {\"id\":
+          character stays untouched.\n\nExample: read served `zaaaa│    {\"id\":
           \"checkout-5\", \"feature\": \"legacyCheckout\", \"retries\": 3},`.
-          Call { \"replace_from\": \"Hasu\", \"replace_to\": \"Hasu\",
+          Call { \"replace_from\": \"zaaaa\", \"replace_to\": \"zaaaa\",
           \"replace_old\": \"legacyCheckout\", \"replace_new\":
           \"stableCheckout\" }. The line becomes `    {\"id\": \"checkout-5\",
           \"feature\": \"stableCheckout\", \"retries\": 3},` and the post-edit
@@ -13698,10 +13698,10 @@ http_interactions:
           source file and inserted into the destination file, and an empty
           destination file is seeded with the copied lines. The source lines
           stay in place, and the copied lines are written exactly as the source
-          file holds them.\n\nExample: read served `Hasu│old` in `a.ts` and
-          `Qwer│top` in `b.ts`. Call { \"source_from\": \"Hasu\", \"source_to\":
-          \"Hasu\", \"insert_after\": \"Qwer\" } copies `old` from `a.ts` into
-          `b.ts` below `top`; the source `Hasu│old` row stays live. Also give
+          file holds them.\n\nExample: read served `zaaaa│old` in `a.ts` and
+          `zaaac│top` in `b.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\":
+          \"zaaaa\", \"insert_after\": \"zaaac\" } copies `old` from `a.ts` into
+          `b.ts` below `top`; the source `zaaaa│old` row stays live. Also give
           `path` matching the source or destination file the anchors were served
           for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -13725,9 +13725,9 @@ http_interactions:
           empty destination file is seeded with the moved lines. `insert_after`
           must sit outside the source range when both anchors share a file;
           moving a range in one file to where it already sits reports no
-          change.\n\nExample: read served `Hasu│a` in `lib.ts` and `Qwer│top` in
-          `app.ts`. Call { \"source_from\": \"Hasu\", \"source_to\": \"Hasu\",
-          \"insert_after\": \"Qwer\" } moves `a` from `lib.ts` into `app.ts`
+          change.\n\nExample: read served `zaaaa│a` in `lib.ts` and `zaaac│top` in
+          `app.ts`. Call { \"source_from\": \"zaaaa\", \"source_to\": \"zaaaa\",
+          \"insert_after\": \"zaaac\" } moves `a` from `lib.ts` into `app.ts`
           below `top`. Also give `path` matching the source or destination file
           the anchors were served for; it is required and must match anchor
           ownership.","parameters":{"type":"object","required":["path","source_from","source_to","insert_after"],"properties":{"path":{"type":"string","description":"Path
@@ -13740,7 +13740,7 @@ http_interactions:
           copy."},"insert_after":{"type":"string","description":"4-char anchor
           of the destination line; the block goes after it and may live in
           another
-          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          file."}},"additionalProperties":true}}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace, insert,
           copy, or move without a new read; the `=== path ===` header and line
@@ -13771,7 +13771,7 @@ http_interactions:
           absolute)"},"content":{"type":"string","description":"Content to write
           to the
           file"}}}}},{"type":"function","function":{"name":"undo_last_change","description":"Undo
-          the last replace, replace_within, insert, copy, or move on a file,
+          the last replace, replace_match, insert, copy, or move on a file,
           restoring the previous content, BOM, and line endings. Use it when an
           edit removed or changed the wrong lines. If the file changed since
           that edit, the undo is refused with `[E_UNDO_STALE]` and nothing is

@@ -35,15 +35,15 @@
 (require 'pimacs-extensions)
 
 (defconst pimacs-hashline--prefix-regexp
-  "^[ \t]*[A-Za-z0-9]\\{4\\}│"
+  "^[ \t]*[a-z]\\{5\\}│"
   "Regexp matching a pi-hashline-edit-pro line prefix.")
 
 (defconst pimacs-hashline--diff-prefix-regexp
-  "^\\([ +]\\)[ \t]*[A-Za-z0-9]\\{4\\}│"
+  "^\\([ +]\\)[ \t]*[a-z]\\{5\\}│"
   "Regexp matching a context or addition prefix in a hashline diff.")
 
 (defconst pimacs-hashline--diff-deletion-prefix-regexp
-  "^-[ \t]*\\(?:[A-Za-z0-9]\\{4\\}\\|    \\)│"
+  "^-[ \t]*\\(?:[a-z]\\{5\\}\\|     \\)│"
   "Regexp matching a deletion prefix in a hashline diff.")
 
 (defconst pimacs-hashline--auto-read-marker
@@ -100,11 +100,11 @@
            (pimacs-hashline--strip-content-prefixes content)
            details args))
 (defconst pimacs-hashline--grep-anchor-regexp
-  "\\(^[ \t]*[0-9]+[ \t]*│[ \t]*\\)[A-Za-z0-9]\\{4\\}│"
+  "\\(^[ \t]*[0-9]+[:-]│[ \t]*\\)[a-z]\\{5\\}│"
   "Regexp matching the anchor in a numbered hashline grep row.")
 
 (defconst pimacs-hashline--grep-row-regexp
-  "^[ \\t]*\\([0-9]+\\)[ \\t]*\\(│\\)[ \\t]*\\(.*\\)$"
+  "^[ \t]*\\([0-9]+\\)\\([:-]│\\)[ \t]*\\(.*\\)$"
   "Regexp matching a displayed hashline grep row after anchor removal.")
 
 (defconst pimacs-hashline--grep-header-regexp
@@ -311,20 +311,15 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
   "Install the pi-hashline-edit-pro result inserters."
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
-  (pimacs-hashline--set-tool-function
-   "anchor_grep"
-   'pimacs-insert-tool-result-functions
-   #'pimacs-hashline--insert-grep-result)
-  (pimacs-hashline--set-tool-function
-   "anchor_grep"
-   'pimacs-visit-tool-result-functions
-   #'pimacs-hashline--visit-grep-result)
   (pimacs-hashline--wrap-result-inserter
    "write" #'pimacs-hashline--insert-write-result)
-  (pimacs-hashline--alias-tool-function
-   "anchor_grep" "grep"
-   'pimacs-insert-tool-args-functions "argument inserter")
-  (dolist (tool '("insert" "replace" "replace_within" "copy" "move"
+  (pimacs-hashline--set-tool-function
+   "grep" 'pimacs-insert-tool-result-functions
+   #'pimacs-hashline--insert-grep-result)
+  (pimacs-hashline--set-tool-function
+   "grep" 'pimacs-visit-tool-result-functions
+   #'pimacs-hashline--visit-grep-result)
+  (dolist (tool '("insert" "replace" "replace_match" "copy" "move"
                   "undo_last_change"))
     (let ((transfer (member tool '("copy" "move"))))
       (pimacs-hashline--wrap-result-inserter

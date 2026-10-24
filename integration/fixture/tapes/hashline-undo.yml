@@ -33,7 +33,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -67,12 +67,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -167,7 +167,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate
@@ -574,7 +574,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -608,12 +608,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -648,7 +648,7 @@ http_interactions:
           `sample.txt`.\n2. Replace \"beta\" with \"BETA\" using the `replace`
           tool.\n3. Undo that change using the `undo_last_change` tool.\n\nI'll
           start by reading
-          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"ekJR│alpha\nUBqx│beta\nroWT│gamma","tool_call_id":"call_pu2hvajs"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaaa│alpha\nzaaab│beta\nzaaac│gamma","tool_call_id":"call_pu2hvajs"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character alphanumeric anchor, the `│` separator, then the line
           content. Target lines in replace and insert by anchor, never by
@@ -713,7 +713,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate
@@ -878,7 +878,7 @@ http_interactions:
 
 
           data:
-          {"id":"chatcmpl-765","object":"chat.completion.chunk","created":1789386371,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_61bpdme3","index":0,"type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"UBqx\",\"remove_to\":\"UBqx\",\"replacement_lines\":[\"BETA\"]}"}}]},"finish_reason":null}]}
+          {"id":"chatcmpl-765","object":"chat.completion.chunk","created":1789386371,"model":"gemma4:12b","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_61bpdme3","index":0,"type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"zaaab\",\"remove_to\":\"zaaab\",\"text\":\"BETA\"}"}}]},"finish_reason":null}]}
 
 
           data:
@@ -926,7 +926,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -960,12 +960,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -1000,12 +1000,12 @@ http_interactions:
           `sample.txt`.\n2. Replace \"beta\" with \"BETA\" using the `replace`
           tool.\n3. Undo that change using the `undo_last_change` tool.\n\nI'll
           start by reading
-          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"ekJR│alpha\nUBqx│beta\nroWT│gamma","tool_call_id":"call_pu2hvajs"},{"role":"assistant","content":null,"reasoning":"Now
+          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaaa│alpha\nzaaab│beta\nzaaac│gamma","tool_call_id":"call_pu2hvajs"},{"role":"assistant","content":null,"reasoning":"Now
           I will replace \"beta\" with \"BETA\". The anchor for the line
           \"beta\" is
-          `UBqx`.","tool_calls":[{"id":"call_61bpdme3","type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"UBqx\",\"remove_to\":\"UBqx\",\"replacement_lines\":[\"BETA\"]}"}}]},{"role":"tool","content":"
-          ekJR│alpha\n-UBqx│beta\n+CPyp│BETA\n
-          roWT│gamma","tool_call_id":"call_61bpdme3"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          `zaaab`.","tool_calls":[{"id":"call_61bpdme3","type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"zaaab\",\"remove_to\":\"zaaab\",\"replacement_lines\":[\"BETA\"]}"}}]},{"role":"tool","content":"
+          zaaaa│alpha\n-zaaab│beta\n+zaaad│BETA\n
+          zaaac│gamma","tool_call_id":"call_61bpdme3"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character alphanumeric anchor, the `│` separator, then the line
           content. Target lines in replace and insert by anchor, never by
@@ -1070,7 +1070,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate
@@ -1202,7 +1202,7 @@ http_interactions:
           `replacement_lines` without `│`, one edit per call; include `path`
           (required)\n- insert: Insert `lines` after or before an anchor line:
           the anchor line stays, `lines` are bare without `│`, one per element;
-          include `path` (required)\n- anchor_grep: Search with `lineNumber │
+          include `path` (required)\n- grep: Search with `lineNumber │
           anchor│content` hits usable directly for `replace`/`insert`; use
           `literal`/`glob`/`context`\n- write: Create or overwrite files\n-
           undo_last_change: Undo last `replace`/`insert` on a file; restores
@@ -1236,12 +1236,12 @@ http_interactions:
           join the file's batch: earlier calls reply `In batch` (`In batch N`
           when several files batch), the last call shows the combined diff.\n-
           `insert`: include `path` matching the file the anchor was served for;
-          it is required.\n- `anchor_grep`: hits and `context` rows come back as
+          it is required.\n- `grep`: hits and `context` rows come back as
           `lineNumber │ anchor│content` — target them with `replace`/`insert`
-          directly; `lineNumber` enables jump-to-line.\n- `anchor_grep`: `path`
+          directly; `lineNumber` enables jump-to-line.\n- `grep`: `path`
           takes a file or folder (default cwd), `glob` like `*.ts` filters,
           `literal:true` for literal text, `context:N` for surrounding lines.\n-
-          `anchor_grep`: binary/image files are skipped silently.\n- Use write
+          `grep`: binary/image files are skipped silently.\n- Use write
           only for new files or complete rewrites.\n- `undo_last_change`: only
           the last `replace`/`insert` per file is undoable; a `write` clears it,
           so undo right after a bad diff (check the `-anchor│` lines you wanted
@@ -1276,16 +1276,16 @@ http_interactions:
           `sample.txt`.\n2. Replace \"beta\" with \"BETA\" using the `replace`
           tool.\n3. Undo that change using the `undo_last_change` tool.\n\nI'll
           start by reading
-          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"ekJR│alpha\nUBqx│beta\nroWT│gamma","tool_call_id":"call_pu2hvajs"},{"role":"assistant","content":null,"reasoning":"Now
+          `sample.txt`.","tool_calls":[{"id":"call_pu2hvajs","type":"function","function":{"name":"read","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"zaaaa│alpha\nzaaab│beta\nzaaac│gamma","tool_call_id":"call_pu2hvajs"},{"role":"assistant","content":null,"reasoning":"Now
           I will replace \"beta\" with \"BETA\". The anchor for the line
           \"beta\" is
-          `UBqx`.","tool_calls":[{"id":"call_61bpdme3","type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"UBqx\",\"remove_to\":\"UBqx\",\"replacement_lines\":[\"BETA\"]}"}}]},{"role":"tool","content":"
-          ekJR│alpha\n-UBqx│beta\n+CPyp│BETA\n
-          roWT│gamma","tool_call_id":"call_61bpdme3"},{"role":"assistant","content":null,"reasoning":"Now
+          `zaaab`.","tool_calls":[{"id":"call_61bpdme3","type":"function","function":{"name":"replace","arguments":"{\"path\":\"sample.txt\",\"remove_from\":\"zaaab\",\"remove_to\":\"zaaab\",\"replacement_lines\":[\"BETA\"]}"}}]},{"role":"tool","content":"
+          zaaaa│alpha\n-zaaab│beta\n+zaaad│BETA\n
+          zaaac│gamma","tool_call_id":"call_61bpdme3"},{"role":"assistant","content":null,"reasoning":"Now
           I will undo the
           change.","tool_calls":[{"id":"call_8tgbde2w","type":"function","function":{"name":"undo_last_change","arguments":"{\"path\":\"sample.txt\"}"}}]},{"role":"tool","content":"
-          ekJR│alpha\n-CPyp│BETA\n+UBqx│beta\n
-          roWT│gamma","tool_call_id":"call_8tgbde2w"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
+          zaaaa│alpha\n-zaaad│BETA\n+zaaab│beta\n
+          zaaac│gamma","tool_call_id":"call_8tgbde2w"}],"stream":true,"stream_options":{"include_usage":true},"store":false,"max_completion_tokens":100000,"tools":[{"type":"function","function":{"name":"read","description":"Read
           a text file and return it as `anchor│content` rows, one per line: a
           4-character alphanumeric anchor, the `│` separator, then the line
           content. Target lines in replace and insert by anchor, never by
@@ -1350,7 +1350,7 @@ http_interactions:
           line to insert; never embed \\n inside an
           element."},"description":"One string per line; [\"\"] is a blank line;
           never include the anchor
-          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"anchor_grep","description":"Search
+          line."}},"additionalProperties":true},"strict":false}},{"type":"function","function":{"name":"grep","description":"Search
           text files with ripgrep. Hits and context lines come back as
           `lineNumber │ anchor│content` rows, editable with replace or insert
           without a new read; the `=== path ===` header and line numbers locate
