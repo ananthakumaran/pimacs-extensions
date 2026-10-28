@@ -34,16 +34,21 @@
 
 (require 'pimacs-extensions)
 
+(defconst pimacs-hashline--anchor-regexp
+  "\\(?:[a-z]\\{5\\}\\|[A-Za-z0-9]\\{4\\}\\)"
+  "Regexp matching current anchors and anchors saved in older sessions.")
+
 (defconst pimacs-hashline--prefix-regexp
-  "^[ \t]*[a-z]\\{5\\}│"
+  (concat "^[ \t]*" pimacs-hashline--anchor-regexp "│")
   "Regexp matching a pi-hashline-edit-pro line prefix.")
 
 (defconst pimacs-hashline--diff-prefix-regexp
-  "^\\([ +]\\)[ \t]*[a-z]\\{5\\}│"
+  (concat "^\\([ +]\\)[ \t]*" pimacs-hashline--anchor-regexp "│")
   "Regexp matching a context or addition prefix in a hashline diff.")
 
 (defconst pimacs-hashline--diff-deletion-prefix-regexp
-  "^-[ \t]*\\(?:[a-z]\\{5\\}\\|     \\)│"
+  (concat "^-[ \t]*\\(?:" pimacs-hashline--anchor-regexp
+          "\\| \\{4,5\\}\\)│")
   "Regexp matching a deletion prefix in a hashline diff.")
 
 (defconst pimacs-hashline--auto-read-marker
@@ -94,17 +99,28 @@
       (when-let ((diff (plist-get details :diff)))
         (pimacs-hashline--normalize-diff diff)))))
 
+(defun pimacs-hashline--insert-read-args (args)
+  "Normalize numeric strings in read ARGS before rendering them."
+  (let ((args (copy-sequence args)))
+    (dolist (key '(:offset :limit))
+      (let ((value (plist-get args key)))
+        (when (and (stringp value)
+                   (string-match-p "\\`[0-9]+\\'" value))
+          (setq args (plist-put args key (string-to-number value))))))
+    (pimacs--insert-read-args args)))
+
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
   (funcall inserter
            (pimacs-hashline--strip-content-prefixes content)
            details args))
 (defconst pimacs-hashline--grep-anchor-regexp
-  "\\(^[ \t]*[0-9]+[:-]│[ \t]*\\)[a-z]\\{5\\}│"
+  (concat "\\(^[ \t]*[0-9]+[ \t]*[:-]?│[ \t]*\\)"
+          pimacs-hashline--anchor-regexp "│")
   "Regexp matching the anchor in a numbered hashline grep row.")
 
 (defconst pimacs-hashline--grep-row-regexp
-  "^[ \t]*\\([0-9]+\\)\\([:-]│\\)[ \t]*\\(.*\\)$"
+  "^[ \t]*\\([0-9]+\\)[ \t]*\\([:-]?│\\)[ \t]*\\(.*\\)$"
   "Regexp matching a displayed hashline grep row after anchor removal.")
 
 (defconst pimacs-hashline--grep-header-regexp
@@ -309,18 +325,26 @@ Use SOURCE-TOOL's built-in Pimacs inserter as the delegate when supplied."
 
 (defun pimacs-hashline-enable ()
   "Install the pi-hashline-edit-pro result inserters."
+  (pimacs-hashline--set-tool-function
+   "read" 'pimacs-insert-tool-args-functions
+   #'pimacs-hashline--insert-read-args)
   (pimacs-hashline--wrap-result-inserter
    "read" #'pimacs-hashline--insert-read-result)
   (pimacs-hashline--wrap-result-inserter
    "write" #'pimacs-hashline--insert-write-result)
-  (pimacs-hashline--set-tool-function
-   "grep" 'pimacs-insert-tool-result-functions
-   #'pimacs-hashline--insert-grep-result)
-  (pimacs-hashline--set-tool-function
-   "grep" 'pimacs-visit-tool-result-functions
-   #'pimacs-hashline--visit-grep-result)
-  (dolist (tool '("insert" "replace" "replace_match" "copy" "move"
-                  "undo_last_change"))
+  ;; Retain the old tool names when rendering saved sessions.
+  (dolist (tool '("grep" "anchor_grep"))
+    (pimacs-hashline--set-tool-function
+     tool 'pimacs-insert-tool-result-functions
+     #'pimacs-hashline--insert-grep-result)
+    (pimacs-hashline--set-tool-function
+     tool 'pimacs-visit-tool-result-functions
+     #'pimacs-hashline--visit-grep-result))
+  (pimacs-hashline--alias-tool-function
+   "anchor_grep" "grep"
+   'pimacs-insert-tool-args-functions "argument inserter")
+  (dolist (tool '("insert" "replace" "replace_match" "replace_within"
+                  "copy" "move" "undo_last_change"))
     (let ((transfer (member tool '("copy" "move"))))
       (pimacs-hashline--wrap-result-inserter
        tool (if transfer #'pimacs-hashline--insert-transfer-result
