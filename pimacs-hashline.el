@@ -100,14 +100,19 @@
         (pimacs-hashline--normalize-diff diff)))))
 
 (defun pimacs-hashline--insert-read-args (args)
-  "Normalize numeric strings in read ARGS before rendering them."
+  "Render read ARGS with numeric or anchor offsets."
   (let ((args (copy-sequence args)))
     (dolist (key '(:offset :limit))
       (let ((value (plist-get args key)))
         (when (and (stringp value)
                    (string-match-p "\\`[0-9]+\\'" value))
           (setq args (plist-put args key (string-to-number value))))))
-    (pimacs--insert-read-args args)))
+    (if (stringp (plist-get args :offset))
+        (when-let ((path (plist-get args :path)))
+          (pimacs--insert-file-link
+           path (pimacs--project-root)
+           (format ":%s" (plist-get args :offset))))
+      (pimacs--insert-read-args args))))
 
 (defun pimacs-hashline--insert-read-result (inserter content details args)
   "Normalize hashline read CONTENT and delegate to INSERTER."
